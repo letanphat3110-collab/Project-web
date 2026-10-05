@@ -1,0 +1,1418 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tune and task performance — Chọn nhạc cho việc học & làm việc</title>
+  <meta name="description" content="Tune and task performance giúp bạn chọn đúng loại nhạc cho từng việc: yên tĩnh, lo-fi không lời, pop ballad hay remix TikTok — và phát ngay trên web." />
+  <meta name="theme-color" content="#0b0b12" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='18' fill='%23d4ff3a'/><path d='M14 38c6 0 6-14 12-14s6 18 12 18 6-10 12-10' stroke='%230b0b12' stroke-width='6' fill='none' stroke-linecap='round'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --bg: #0b0b12;
+  --bg2: #12121c;
+  --card: rgba(255, 255, 255, 0.045);
+  --card-b: rgba(255, 255, 255, 0.09);
+  --text: #f4f3fa;
+  --muted: #9a98ad;
+  --dim: #5f5d72;
+  --a: #b69cff;
+  --a2: #6c4cf5;
+  --radius: 22px;
+  --player-h: 96px;
+  --font: "Be Vietnam Pro", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: calc(var(--player-h) + 24px);
+  -webkit-font-smoothing: antialiased;
+  transition: --a 0.6s;
+}
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+input { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+svg { display: block; }
+
+/* ---------- Background ---------- */
+.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.blob {
+  position: absolute; border-radius: 50%; filter: blur(110px); opacity: 0.45;
+  transition: background 0.8s ease;
+}
+.b1 { width: 55vw; height: 55vw; top: -18vw; left: -12vw; background: var(--a2); animation: float1 22s ease-in-out infinite; }
+.b2 { width: 45vw; height: 45vw; bottom: -20vw; right: -10vw; background: var(--a); opacity: 0.25; animation: float2 26s ease-in-out infinite; }
+.grain {
+  position: absolute; inset: -50%;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.5'/></svg>");
+  opacity: 0.07; mix-blend-mode: overlay;
+}
+@keyframes float1 { 50% { transform: translate(8vw, 6vw) scale(1.1); } }
+@keyframes float2 { 50% { transform: translate(-6vw, -4vw) scale(0.92); } }
+
+/* ---------- Topbar ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1280px; margin: 0 auto; padding: 22px 28px;
+}
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.03em; line-height: 1.1; color: var(--text); text-decoration: none; }
+.logo .dot { color: var(--a); transition: color 0.5s; }
+.logo-mark { width: 38px; height: 38px; border-radius: 12px; background: var(--a); display: grid; place-items: center; transition: background 0.5s; }
+.logo-mark svg { width: 26px; height: 26px; fill: none; stroke: var(--bg); stroke-width: 6; stroke-linecap: round; }
+.top-right { display: flex; align-items: center; gap: 14px; }
+.greet { color: var(--muted); font-size: 14px; }
+.timer-chip {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 99px;
+  background: var(--card); border: 1px solid var(--card-b); font-family: var(--mono); font-size: 14px;
+}
+.timer-chip .pulse { width: 8px; height: 8px; border-radius: 50%; background: #9fd8ff; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+
+/* ---------- Layout ---------- */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+.card { background: var(--card); border: 1px solid var(--card-b); border-radius: var(--radius); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+
+/* ---------- Hero ---------- */
+.hero { padding: 36px 0 30px; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.18em; font-size: 12px; font-weight: 700; color: var(--a); margin: 0 0 14px; transition: color 0.5s; }
+.eyebrow.small { font-size: 11px; margin-bottom: 6px; }
+h1 {
+  font-size: clamp(40px, 7vw, 96px); line-height: 0.98; letter-spacing: -0.05em; font-weight: 900;
+  margin: 0; max-width: 14ch;
+}
+h1 em {
+  font-style: normal;
+  background: linear-gradient(100deg, var(--a), var(--a2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.lead { color: var(--muted); font-size: 18px; max-width: 56ch; line-height: 1.6; margin: 20px 0 26px; }
+.activities { display: flex; flex-wrap: wrap; gap: 10px; }
+.activity {
+  padding: 10px 16px; border-radius: 99px; font-size: 14px; font-weight: 500;
+  background: var(--card); border: 1px solid var(--card-b);
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+}
+.activity:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.25); }
+.activity.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.suggest {
+  margin-top: 16px; display: inline-flex; align-items: center; gap: 12px; padding: 12px 18px;
+  border-radius: 16px; background: color-mix(in srgb, var(--a) 14%, transparent); border: 1px solid color-mix(in srgb, var(--a) 40%, transparent);
+  font-size: 15px; animation: rise 0.35s ease;
+}
+.suggest-badge { background: var(--a); color: var(--bg); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 8px; border-radius: 6px; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- Mode cards ---------- */
+.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.mode {
+  --ma: #fff; --ma2: #888;
+  position: relative; overflow: hidden; text-align: left; padding: 20px; min-height: 190px;
+  border-radius: var(--radius); background: var(--card); border: 1px solid var(--card-b);
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.25s, box-shadow 0.25s;
+}
+.mode::before {
+  content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity 0.35s;
+  background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--ma) 40%, transparent), transparent 60%),
+              linear-gradient(160deg, color-mix(in srgb, var(--ma2) 35%, transparent), transparent 70%);
+}
+.mode:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); }
+.mode:hover::before { opacity: 0.55; }
+.mode.active { border-color: var(--ma); box-shadow: 0 20px 60px -20px var(--ma2); }
+.mode.active::before { opacity: 1; }
+.mode > * { position: relative; }
+.mode-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.mode-no { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.mode-emoji {
+  width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 20px;
+  background: color-mix(in srgb, var(--ma) 18%, transparent); color: var(--ma);
+}
+.mode.active .mode-emoji { background: var(--ma); color: #0b0b12; }
+.mode h4 { margin: 18px 0 6px; font-size: 21px; letter-spacing: -0.03em; font-weight: 800; }
+.mode p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.mode.active p { color: #d9d7e6; }
+.mode .count { margin-top: 12px; font-size: 12px; font-weight: 600; color: var(--ma); }
+.mode.recommended::after {
+  content: "Gợi ý cho bạn"; position: absolute; top: 14px; right: 66px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+  background: var(--ma); color: #0b0b12; padding: 4px 8px; border-radius: 6px; animation: rise 0.3s;
+}
+
+/* ---------- Stage ---------- */
+.stage { display: grid; grid-template-columns: 380px 1fr; gap: 18px; align-items: start; }
+.now { padding: 20px; position: sticky; top: 20px; }
+.now-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; color: var(--muted); }
+.eq { display: flex; gap: 3px; align-items: flex-end; height: 18px; }
+.eq i { width: 3px; height: 30%; background: var(--a); border-radius: 2px; animation: eq 0.9s ease-in-out infinite; animation-play-state: paused; }
+.eq i:nth-child(2) { animation-delay: -0.3s; } .eq i:nth-child(3) { animation-delay: -0.6s; }
+.eq i:nth-child(4) { animation-delay: -0.15s; } .eq i:nth-child(5) { animation-delay: -0.45s; }
+body.playing .eq i { animation-play-state: running; }
+@keyframes eq { 50% { height: 100%; } }
+
+.media { aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden; position: relative; background: #000; }
+.cover {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: radial-gradient(circle at 30% 20%, var(--a), transparent 55%), radial-gradient(circle at 80% 90%, var(--a2), transparent 60%), #16121f;
+}
+.vinyl {
+  width: 72%; aspect-ratio: 1; border-radius: 50%;
+  background: repeating-radial-gradient(circle, #111 0 2px, #1b1b1f 2px 4px);
+  box-shadow: 0 30px 60px -10px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.06);
+  display: grid; place-items: center; animation: spin 6s linear infinite; animation-play-state: paused;
+}
+body.playing .vinyl { animation-play-state: running; }
+.vinyl-label {
+  width: 36%; aspect-ratio: 1; border-radius: 50%; background: var(--a); color: var(--bg);
+  display: grid; place-items: center; font-weight: 900; font-size: 11px; letter-spacing: -0.02em; line-height: 1.15; text-align: center; padding: 8px; box-sizing: border-box; overflow: hidden;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.yt-wrap { position: absolute; inset: 0; }
+.yt-wrap iframe, .yt-wrap > div { width: 100%; height: 100%; }
+.silent-art { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(circle, #1a2333, #0b0b12 70%); }
+.silent-art span { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #cfe9ff; }
+.ring { position: absolute; border-radius: 50%; border: 1px solid rgba(159,216,255,0.35); animation: breathe 6s ease-in-out infinite; }
+.r1 { width: 40%; aspect-ratio: 1; } .r2 { width: 62%; aspect-ratio: 1; animation-delay: -2s; } .r3 { width: 84%; aspect-ratio: 1; animation-delay: -4s; }
+@keyframes breathe { 50% { transform: scale(1.08); opacity: 0.35; } }
+
+.now-meta { margin: 18px 0 14px; }
+.now-meta h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.03em; line-height: 1.2; }
+.now-meta p { margin: 0; color: var(--muted); font-size: 14px; }
+.now-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 8px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text);
+  background: rgba(255,255,255,0.06); border: 1px solid var(--card-b); transition: background 0.2s;
+}
+.pill:hover { background: rgba(255,255,255,0.12); }
+.pill.on { background: var(--a); color: var(--bg); border-color: var(--a); }
+
+/* ---------- Panel ---------- */
+.panel { padding: 24px; min-height: 520px; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.panel-head h3 { margin: 0; font-size: 30px; letter-spacing: -0.04em; font-weight: 900; }
+.panel-actions { display: flex; gap: 8px; }
+.btn { padding: 11px 18px; border-radius: 14px; font-weight: 700; font-size: 14px; transition: transform 0.15s, filter 0.2s, background 0.2s; }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--a); color: var(--bg); }
+.btn.primary:hover { filter: brightness(1.1); }
+.btn.ghost { background: rgba(255,255,255,0.06); border: 1px solid var(--card-b); }
+.btn.ghost:hover { background: rgba(255,255,255,0.12); }
+.btn.big { padding: 15px 28px; font-size: 16px; }
+.btn.wide { width: 100%; }
+
+.toolbar { display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { padding: 7px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted); transition: all 0.2s; }
+.tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.tab.active { color: var(--bg); background: var(--text); }
+.search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,0.25); border: 1px solid var(--card-b); min-width: 220px; }
+.search svg { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 2; }
+.search input { background: none; border: 0; outline: 0; width: 100%; font-size: 14px; }
+
+.tracks { list-style: none; padding: 0; margin: 0; }
+.track {
+  display: grid; grid-template-columns: 32px 52px 1fr auto auto; gap: 14px; align-items: center;
+  padding: 10px 12px; border-radius: 14px; cursor: pointer; transition: background 0.15s;
+  animation: rise 0.3s ease backwards;
+}
+.track:hover { background: rgba(255,255,255,0.05); }
+.track.current { background: color-mix(in srgb, var(--a) 13%, transparent); }
+.t-no { font-family: var(--mono); font-size: 13px; color: var(--dim); text-align: center; }
+.track.current .t-no { color: var(--a); }
+.track:hover .t-no::before { content: "▶"; color: var(--text); }
+.track:hover .t-no span { display: none; }
+.t-thumb { width: 52px; height: 52px; border-radius: 10px; background-size: cover; background-position: center; position: relative; overflow: hidden; }
+.t-thumb.gen { background: linear-gradient(135deg, var(--a), var(--a2)); display: grid; place-items: center; font-weight: 900; color: var(--bg); font-size: 18px; }
+.t-text { min-width: 0; }
+.t-text strong { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track.current .t-text strong { color: var(--a); }
+.t-text span { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.t-tag { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 99px; background: rgba(255,255,255,0.06); color: var(--muted); white-space: nowrap; }
+.t-tag.live { background: #ff3b5c; color: #fff; }
+.t-btns { display: flex; gap: 2px; }
+.t-btns button { width: 32px; height: 32px; border-radius: 10px; color: var(--dim); font-size: 16px; display: grid; place-items: center; }
+.t-btns button:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+.t-btns .fav.on { color: #ff6b9a; }
+.empty { color: var(--muted); text-align: center; padding: 40px 0; }
+
+/* ---------- Focus ---------- */
+.focus { display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: center; padding: 12px 0; }
+.ring-timer { position: relative; width: 100%; aspect-ratio: 1; }
+.ring-timer svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.track-ring { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 10; }
+.prog-ring { fill: none; stroke: var(--a); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 553; stroke-dashoffset: 0; transition: stroke-dashoffset 0.5s linear, stroke 0.5s; filter: drop-shadow(0 0 12px var(--a)); }
+.ring-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.phase { font-size: 13px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); font-weight: 700; }
+.clock { font-family: var(--mono); font-size: 64px; font-weight: 700; letter-spacing: -0.04em; }
+.presets { display: flex; gap: 8px; margin-bottom: 18px; }
+.chip { padding: 9px 16px; border-radius: 12px; font-family: var(--mono); font-size: 14px; background: rgba(255,255,255,0.06); border: 1px solid var(--card-b); }
+.chip.active { background: var(--a); color: var(--bg); border-color: var(--a); }
+.goal { display: block; margin-bottom: 18px; }
+.goal span, .field span { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px; }
+.goal input, .field input { width: 100%; padding: 14px 16px; border-radius: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--card-b); outline: 0; font-size: 15px; }
+.goal input:focus, .field input:focus { border-color: var(--a); }
+.focus-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.tips { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; line-height: 1.9; }
+.sessions { font-family: var(--mono); font-size: 13px; color: var(--muted); padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); }
+body.flash .panel { animation: flash 1s ease 4; }
+@keyframes flash { 50% { box-shadow: 0 0 0 3px var(--a), 0 0 80px var(--a); } }
+
+/* ---------- Footer ---------- */
+.foot { color: var(--dim); font-size: 13px; padding: 36px 0 10px; text-align: center; line-height: 1.8; }
+kbd { font-family: var(--mono); font-size: 11px; padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,0.08); border: 1px solid var(--card-b); color: var(--muted); }
+
+/* ---------- Player bar ---------- */
+.player {
+  position: fixed; left: 14px; right: 14px; bottom: 14px; height: var(--player-h); z-index: 20;
+  display: grid; grid-template-columns: 1fr 1.4fr 1fr; align-items: center; gap: 18px; padding: 0 20px;
+  border-radius: 24px; background: rgba(18, 18, 28, 0.78); border: 1px solid var(--card-b);
+  backdrop-filter: blur(30px) saturate(1.4); -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  box-shadow: 0 20px 60px -10px rgba(0,0,0,0.6);
+}
+.p-track { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.p-thumb { width: 56px; height: 56px; flex: none; border-radius: 14px; background: linear-gradient(135deg, var(--a), var(--a2)); background-size: cover; background-position: center; }
+.p-text { min-width: 0; }
+.p-text strong { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-text span { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.p-center { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.p-controls { display: flex; align-items: center; gap: 10px; }
+.ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--muted); position: relative; transition: color 0.2s, background 0.2s; }
+.ic:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+.ic svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#prevBtn svg, #nextBtn svg { fill: currentColor; }
+.ic.on { color: var(--a); }
+.ic .one { position: absolute; top: 4px; right: 4px; font-size: 9px; font-weight: 900; background: var(--a); color: var(--bg); border-radius: 50%; width: 13px; height: 13px; display: grid; place-items: center; }
+.play { width: 48px; height: 48px; border-radius: 50%; background: var(--text); color: var(--bg); display: grid; place-items: center; transition: transform 0.15s, background 0.3s; }
+.play:hover { transform: scale(1.07); background: var(--a); }
+.play svg { width: 20px; height: 20px; fill: currentColor; }
+.play .i-pause { display: none; }
+body.playing .play .i-pause { display: block; }
+body.playing .play .i-play { display: none; }
+.p-seek { display: flex; align-items: center; gap: 10px; width: 100%; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.p-seek span { width: 44px; text-align: center; }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px; outline: none;
+  background: linear-gradient(90deg, var(--a) var(--p, 0%), rgba(255,255,255,0.14) var(--p, 0%));
+}
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--a) 30%, transparent); cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+input[type="range"]:hover::-webkit-slider-thumb { opacity: 1; }
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; }
+input[type="range"]:disabled { opacity: 0.4; }
+
+.p-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.speed { font-family: var(--mono); font-size: 13px; font-weight: 700; padding: 7px 10px; border-radius: 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--card-b); min-width: 58px; }
+.speed.on { background: var(--a); color: var(--bg); border-color: var(--a); }
+.vol { display: flex; align-items: center; gap: 6px; width: 150px; }
+
+/* ---------- Modal & toast ---------- */
+.modal { border: 0; padding: 0; background: transparent; color: var(--text); max-width: 460px; width: calc(100% - 32px); }
+.modal::backdrop { background: rgba(5,5,10,0.7); backdrop-filter: blur(6px); }
+.modal-inner { background: #16151f; border: 1px solid var(--card-b); border-radius: 24px; padding: 24px; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; }
+.modal-head h3 { margin: 0; font-size: 22px; letter-spacing: -0.03em; }
+.muted { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.field { display: block; margin: 16px 0 10px; }
+.or { display: flex; align-items: center; gap: 12px; color: var(--dim); font-size: 12px; margin: 18px 0; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--card-b); }
+.drop { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; padding: 24px; border-radius: 16px; border: 1.5px dashed rgba(255,255,255,0.18); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.drop:hover, .drop.over { border-color: var(--a); background: color-mix(in srgb, var(--a) 8%, transparent); }
+.drop input { display: none; }
+.drop span { font-size: 12.5px; color: var(--muted); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--player-h) + 32px); transform: translate(-50%, 20px);
+  background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 14px; font-size: 14px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 30; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .modes { grid-template-columns: repeat(2, 1fr); }
+  .stage { grid-template-columns: 1fr; }
+  .now { position: static; display: grid; grid-template-columns: 220px 1fr; gap: 0 20px; }
+  .now-head { grid-column: 1 / -1; }
+  .now .media { grid-row: span 2; }
+  .now-meta { margin-top: 0; align-self: end; }
+  .now-actions { align-self: start; }
+}
+@media (max-width: 720px) {
+  :root { --player-h: 138px; }
+  .wrap, .topbar { padding-left: 16px; padding-right: 16px; }
+  .greet { display: none; }
+  .logo { font-size: 17px; }
+  .modes { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode { min-height: 160px; padding: 16px; }
+  .mode h4 { font-size: 17px; margin-top: 12px; }
+  .mode p { display: none; }
+  .mode.recommended::after { right: 14px; top: auto; bottom: 14px; }
+  .now { grid-template-columns: 120px 1fr; }
+  .panel { padding: 18px; }
+  .panel-head h3 { font-size: 24px; }
+  .track { grid-template-columns: 44px 1fr auto; gap: 10px; padding: 8px; }
+  .t-no, .t-tag { display: none; }
+  .t-thumb { width: 44px; height: 44px; }
+  .focus { grid-template-columns: 1fr; }
+  .ring-timer { max-width: 260px; margin: 0 auto; }
+  .player { grid-template-columns: 1fr auto; grid-template-rows: auto auto; padding: 12px 14px; gap: 8px 12px; left: 8px; right: 8px; bottom: 8px; }
+  .p-center { grid-column: 1 / -1; grid-row: 2; }
+  .p-right .vol { display: none; }
+  .p-thumb { width: 44px; height: 44px; }
+}
+
+.share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
+  </style>
+</head>
+<body data-mode="lofi">
+  <div class="bg" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="logo" href="#" aria-label="Tune and task performance — trang chủ">
+      <span class="logo-mark"><svg viewBox="0 0 64 64"><path d="M8 38c7 0 7-16 14-16s7 20 14 20 7-12 14-12 6 6 6 6" /></svg></span>
+      Tune and task performance
+    </a>
+    <div class="top-right">
+      <button class="timer-chip" id="timerChip" hidden aria-label="Mở bộ đếm giờ tập trung">
+        <span class="pulse"></span><span id="timerChipText">25:00</span>
+      </button>
+      <span class="greet" id="greet">Chào bạn</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Âm nhạc cho học tập & làm việc</p>
+      <h1>Hôm nay bạn cần <em>bài nhạc</em> nào?</h1>
+      <p class="lead">Chọn việc bạn đang làm — chúng mình gợi ý kiểu âm thanh phù hợp nhất. Hoặc tự chọn một chế độ bên dưới và bấm phát.</p>
+      <div class="activities" id="activities" role="list"></div>
+      <div class="suggest" id="suggest" hidden>
+        <span class="suggest-badge">Gợi ý</span>
+        <span id="suggestText"></span>
+      </div>
+    </section>
+
+    <section class="modes" id="modes" aria-label="Chế độ nghe"></section>
+
+    <section class="stage">
+      <aside class="now card" id="nowCard">
+        <div class="now-head">
+          <span class="label" id="nowLabel">Đang phát</span>
+          <div class="eq" id="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="media" id="media">
+          <div class="cover" id="cover">
+            <div class="vinyl"><div class="vinyl-label" id="vinylLabel">nhịp.</div></div>
+          </div>
+          <div class="yt-wrap" id="ytWrap" hidden><div id="ytPlayer"></div></div>
+          <div class="silent-art" id="silentArt" hidden>
+            <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+            <span>Shhh…</span>
+          </div>
+        </div>
+        <div class="now-meta">
+          <h2 id="nowTitle">Chưa chọn bài</h2>
+          <p id="nowArtist">Chọn một bài trong danh sách để bắt đầu</p>
+        </div>
+        <div class="now-actions">
+          <button class="pill" id="favNow" aria-label="Yêu thích bài này">♡ Yêu thích</button>
+          <a class="pill" id="openYt" target="_blank" rel="noopener" hidden>Mở trên YouTube ↗</a>
+        </div>
+      </aside>
+
+      <div class="panel card" id="panel">
+        <div id="listView">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow small" id="modeFull">Lo-fi · Không lời</p>
+              <h3 id="modeTitle">Lo-fi & Không lời</h3>
+            </div>
+            <div class="panel-actions">
+              <button class="btn primary" id="playAll">▶ Phát tất cả</button>
+              <button class="btn ghost" id="addBtn">＋ Thêm nhạc</button>
+            </div>
+          </div>
+          <div class="toolbar">
+            <div class="tabs" id="tabs" role="tablist"></div>
+            <label class="search">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="search" type="search" placeholder="Tìm bài, nghệ sĩ…" autocomplete="off" />
+            </label>
+          </div>
+          <ol class="tracks" id="tracks"></ol>
+          <p class="empty" id="empty" hidden>Không có bài nào khớp. Thử từ khoá khác hoặc thêm nhạc của bạn ✨</p>
+        </div>
+
+        <div id="focusView" hidden>
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow small">Yên tĩnh hoàn toàn</p>
+              <h3>Phiên tập trung</h3>
+            </div>
+            <span class="sessions" id="sessions">0 phiên hôm nay</span>
+          </div>
+          <div class="focus">
+            <div class="ring-timer">
+              <svg viewBox="0 0 200 200">
+                <circle class="track-ring" cx="100" cy="100" r="88" />
+                <circle class="prog-ring" id="progRing" cx="100" cy="100" r="88" />
+              </svg>
+              <div class="ring-inner">
+                <span class="phase" id="phase">Tập trung</span>
+                <span class="clock" id="clock">25:00</span>
+              </div>
+            </div>
+            <div class="focus-side">
+              <div class="presets" id="presets">
+                <button class="chip active" data-work="25" data-break="5">25 / 5</button>
+                <button class="chip" data-work="50" data-break="10">50 / 10</button>
+                <button class="chip" data-work="90" data-break="15">90 / 15</button>
+              </div>
+              <label class="goal">
+                <span>Mục tiêu phiên này</span>
+                <input id="goal" type="text" placeholder="VD: Làm xong 10 câu trắc nghiệm Lý" maxlength="80" />
+              </label>
+              <div class="focus-btns">
+                <button class="btn primary big" id="timerStart">Bắt đầu</button>
+                <button class="btn ghost" id="timerReset">Đặt lại</button>
+                <button class="btn ghost" id="timerSkip">Bỏ qua ⇥</button>
+              </div>
+              <ul class="tips">
+                <li>Tắt thông báo điện thoại, úp màn hình xuống.</li>
+                <li>Hết giờ, màn hình sẽ nháy nhẹ — không phát tiếng nào.</li>
+                <li>Bộ đếm vẫn chạy khi bạn chuyển sang chế độ khác.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Tune and task performance · Nhạc được phát qua YouTube và SoundHelix; bản quyền thuộc về tác giả. Phím tắt: <kbd>Space</kbd> phát/dừng · <kbd>Shift</kbd>+<kbd>→</kbd> bài sau · <kbd>Shift</kbd>+<kbd>←</kbd> bài trước</p>
+    </footer>
+  </main>
+
+  <div class="player" id="player">
+    <div class="p-track">
+      <div class="p-thumb" id="pThumb"></div>
+      <div class="p-text">
+        <strong id="pTitle">nhịp.</strong>
+        <span id="pArtist">Sẵn sàng phát</span>
+      </div>
+    </div>
+    <div class="p-center">
+      <div class="p-controls">
+        <button class="ic" id="shuffleBtn" aria-label="Phát ngẫu nhiên" title="Ngẫu nhiên">
+          <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+        </button>
+        <button class="ic" id="prevBtn" aria-label="Bài trước">
+          <svg viewBox="0 0 24 24"><path d="M19 20 9 12l10-8v16zM5 19V5" /></svg>
+        </button>
+        <button class="play" id="playBtn" aria-label="Phát">
+          <svg class="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24"><path d="M7 4h4v16H7zM14 4h4v16h-4z"/></svg>
+        </button>
+        <button class="ic" id="nextBtn" aria-label="Bài sau">
+          <svg viewBox="0 0 24 24"><path d="m5 4 10 8-10 8V4zM19 5v14" /></svg>
+        </button>
+        <button class="ic" id="repeatBtn" aria-label="Lặp lại" title="Lặp: tắt">
+          <svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="one" hidden>1</span>
+        </button>
+      </div>
+      <div class="p-seek">
+        <span id="curTime">0:00</span>
+        <input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="Tua" />
+        <span id="durTime">0:00</span>
+      </div>
+    </div>
+    <div class="p-right">
+      <button class="speed" id="speedBtn" title="Tốc độ phát (Speed-up / Slowed)">1.0×</button>
+      <div class="vol">
+        <button class="ic" id="muteBtn" aria-label="Tắt tiếng">
+          <svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+        </button>
+        <input type="range" id="volume" min="0" max="100" value="80" aria-label="Âm lượng" />
+      </div>
+    </div>
+  </div>
+
+  <dialog class="modal" id="addModal">
+    <form method="dialog" class="modal-inner" id="addForm">
+      <div class="modal-head">
+        <h3>Thêm nhạc của bạn</h3>
+        <button class="ic" value="cancel" aria-label="Đóng">✕</button>
+      </div>
+      <p class="muted">Thêm vào chế độ <strong id="addModeName">Lo-fi</strong>. Link YouTube được lưu lại trên trình duyệt này.</p>
+      <label class="field">
+        <span>Link YouTube</span>
+        <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." />
+      </label>
+      <label class="share" id="shareRow" hidden><input type="checkbox" id="shareChk" checked /> Chia sẻ bài này cho mọi người cùng nghe</label>
+      <button class="btn primary wide" id="addYt" type="button">Thêm từ YouTube</button>
+      <div class="or"><span>hoặc</span></div>
+      <label class="drop" id="drop">
+        <input id="fileInput" type="file" accept="audio/*" multiple />
+        <strong>Chọn file nhạc từ máy</strong>
+        <span>MP3, M4A, WAV… (chỉ phát trong phiên này, không tải lên đâu cả)</span>
+      </label>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+// Thư viện nhạc mặc định cho từng chế độ.
+// type "yt"    → phát qua YouTube IFrame Player (id = video id)
+// type "audio" → phát qua thẻ <audio> (src = đường dẫn MP3)
+// tag          → dùng cho bộ lọc nhỏ trong từng chế độ
+// ====== DANH SÁCH CHUNG (mọi người cùng thấy) ======
+// Dán URL Firebase Realtime Database vào đây, ví dụ:
+// "https://ten-du-an-default-rtdb.asia-southeast1.firebasedatabase.app"
+// Để trống = chỉ lưu riêng trên từng máy.
+window.NHIP_SHARED_URL = "https://tune-and-task-performance-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+const SH = (n) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`;
+
+window.NHIP_MODES = [
+  {
+    id: "silent",
+    no: "01",
+    name: "Yên tĩnh",
+    full: "Yên tĩnh hoàn toàn",
+    desc: "Không nhạc, không âm thanh. Chỉ bạn và một bộ đếm giờ tập trung.",
+    emoji: "◯",
+    accent: "#9fd8ff",
+    accent2: "#5b7cfa",
+    tags: [],
+  },
+  {
+    id: "lofi",
+    no: "02",
+    name: "Lo-fi & Không lời",
+    full: "Lo-fi · Không lời · Cổ điển · Thư giãn",
+    desc: "Nhịp chậm, không lời — để não dành chỗ cho bài tập, code và thiết kế.",
+    emoji: "☾",
+    accent: "#b69cff",
+    accent2: "#6c4cf5",
+    tags: ["Lo-fi", "Không lời", "Cổ điển", "Thư giãn"],
+  },
+  {
+    id: "pop",
+    no: "03",
+    name: "Pop & Ballad",
+    full: "Pop · Ballad · Nhạc nhẹ có lời",
+    desc: "Giai điệu quen, có lời để ngân nga — hợp việc nhẹ, việc lặp lại.",
+    emoji: "♡",
+    accent: "#ff8fb1",
+    accent2: "#ff5e62",
+    tags: ["V-Pop", "Ballad", "US-UK"],
+  },
+  {
+    id: "remix",
+    no: "04",
+    name: "Remix & TikTok",
+    full: "Remix · TikTok · Vinahouse · Speed-up",
+    desc: "Bass dày, BPM cao. Nước rút deadline, tập gym, dọn phòng thần tốc.",
+    emoji: "⚡",
+    accent: "#d4ff3a",
+    accent2: "#00e0b0",
+    tags: ["Vinahouse", "TikTok", "EDM"],
+  },
+];
+
+window.NHIP_TRACKS = {
+  silent: [],
+  lofi: [
+    { type: "yt", id: "jfKfPfyJRdk", title: "lofi hip hop radio — beats to relax/study to", artist: "Lofi Girl", tag: "Lo-fi", live: true },
+    { type: "yt", id: "4xDzrJKXOOY", title: "synthwave radio — beats to chill/game to", artist: "Lofi Girl", tag: "Lo-fi", live: true },
+    { type: "yt", id: "ckKUas0VQg4", title: "See Tình (Lofi Version)", artist: "Hoàng Thùy Linh x Zeaplee · 1 9 6 7", tag: "Lo-fi" },
+    { type: "yt", id: "4Tr0otuiQuU", title: "Moonlight Sonata (Full)", artist: "Ludwig van Beethoven", tag: "Cổ điển" },
+    { type: "yt", id: "9E6b3swbnWg", title: "Nocturne Op. 9 No. 2", artist: "Frédéric Chopin", tag: "Cổ điển" },
+    { type: "audio", src: SH(1), title: "Đêm ôn thi", artist: "SoundHelix · Song 1", tag: "Không lời" },
+    { type: "audio", src: SH(2), title: "Mưa trên mái hiên", artist: "SoundHelix · Song 2", tag: "Không lời" },
+    { type: "audio", src: SH(6), title: "Cà phê 7 giờ", artist: "SoundHelix · Song 6", tag: "Thư giãn" },
+    { type: "audio", src: SH(8), title: "Ban công lộng gió", artist: "SoundHelix · Song 8", tag: "Thư giãn" },
+    { type: "audio", src: SH(10), title: "Code tới khuya", artist: "SoundHelix · Song 10", tag: "Không lời" },
+  ],
+  pop: [
+    { type: "yt", id: "vTJdVE_gjI0", title: "Đi Về Nhà", artist: "Đen x JustaTee", tag: "V-Pop" },
+    { type: "yt", id: "ZpPBozhojuo", title: "Lãng Đãng", artist: "Đen Vâu", tag: "Ballad" },
+    { type: "yt", id: "Ws-QlpSltr8", title: "Trốn Tìm", artist: "Đen ft. MTV band", tag: "V-Pop" },
+    { type: "yt", id: "ZwzWpYV1_Ew", title: "Chuyến Xe", artist: "Đen", tag: "Ballad" },
+    { type: "yt", id: "FN7ALfpGxiI", title: "Nơi Này Có Anh", artist: "Sơn Tùng M-TP", tag: "V-Pop" },
+    { type: "yt", id: "Llw9Q6akRo4", title: "Lạc Trôi", artist: "Sơn Tùng M-TP", tag: "V-Pop" },
+    { type: "yt", id: "gJHSDZfJrRY", title: "See Tình", artist: "Hoàng Thùy Linh", tag: "V-Pop" },
+    { type: "yt", id: "EWz4fITO5qg", title: "Vì Yêu Cứ Đâm Đầu", artist: "MIN x Đen x JustaTee", tag: "V-Pop" },
+    { type: "yt", id: "2Vv-BfVoq4g", title: "Perfect", artist: "Ed Sheeran", tag: "US-UK" },
+    { type: "yt", id: "lp-EO5I60KA", title: "Thinking Out Loud", artist: "Ed Sheeran", tag: "Ballad" },
+    { type: "yt", id: "hLQl3WQQoQ0", title: "Someone Like You", artist: "Adele", tag: "Ballad" },
+    { type: "yt", id: "450p7goxZqg", title: "All of Me", artist: "John Legend", tag: "Ballad" },
+    { type: "yt", id: "RBumgq5yVrA", title: "Let Her Go", artist: "Passenger", tag: "US-UK" },
+  ],
+  remix: [
+    { type: "yt", id: "3F2A8ZEqeLc", title: "Top 5 Remix TikTok Triệu View", artist: "DT Music", tag: "TikTok" },
+    { type: "yt", id: "SH_25u2Fq_U", title: "Vinahouse Hot TikTok Remix — BXH", artist: "ACV Entertainment", tag: "Vinahouse" },
+    { type: "yt", id: "oX43LGvzSoA", title: "Nonstop Vinahouse Cực Căng", artist: "WM Remix", tag: "Vinahouse" },
+    { type: "yt", id: "KlRVNFgKTQY", title: "Nonstop DJ Vinahouse Việt Mix", artist: "Việt Mix DJ", tag: "Vinahouse" },
+    { type: "yt", id: "tVTRY6851Ug", title: "See Tình (Cukak Remix)", artist: "Hoàng Thùy Linh · Cukak", tag: "TikTok" },
+    { type: "yt", id: "knW7-x7Y7RE", title: "Hãy Trao Cho Anh", artist: "Sơn Tùng M-TP ft. Snoop Dogg", tag: "TikTok" },
+    { type: "yt", id: "60ItHLz5WEA", title: "Faded", artist: "Alan Walker", tag: "EDM" },
+    { type: "yt", id: "wJnBTPUQS5A", title: "The Spectre", artist: "Alan Walker", tag: "EDM" },
+    { type: "yt", id: "_ovdm2yX4MA", title: "Levels", artist: "Avicii", tag: "EDM" },
+    { type: "yt", id: "IcrbM1l_BoI", title: "Wake Me Up", artist: "Avicii", tag: "EDM" },
+    { type: "yt", id: "OPf0YbXqDm0", title: "Uptown Funk", artist: "Mark Ronson ft. Bruno Mars", tag: "TikTok" },
+  ],
+};
+
+// Gợi ý chế độ theo việc bạn đang làm
+window.NHIP_ACTIVITIES = [
+  { label: "📖 Học thuộc / đọc hiểu", mode: "silent", why: "Lời bài hát tranh chỗ với vùng xử lý ngôn ngữ — yên tĩnh giúp nhớ lâu hơn." },
+  { label: "💻 Code / làm bài tập", mode: "lofi", why: "Nhịp đều, không lời giữ bạn trong trạng thái flow mà không làm xao nhãng." },
+  { label: "🎨 Thiết kế / sáng tạo", mode: "lofi", why: "Lo-fi và cổ điển kích thích tâm trạng thoải mái, ý tưởng đến dễ hơn." },
+  { label: "📨 Email / việc lặp lại", mode: "pop", why: "Việc quen tay cần chút năng lượng — nhạc có lời giúp đỡ chán." },
+  { label: "🧹 Dọn phòng / nấu ăn", mode: "pop", why: "Hát theo bài quen là cách nhanh nhất để thời gian trôi vèo." },
+  { label: "🏋️ Tập gym / chạy bộ", mode: "remix", why: "BPM cao kéo nhịp tim lên — thêm Speed-up để tăng tốc." },
+  { label: "🔥 Nước rút deadline", mode: "remix", why: "Bass dày + tốc độ nhanh tạo cảm giác gấp gáp, đẩy bạn về đích." },
+  { label: "🌙 Thư giãn trước khi ngủ", mode: "lofi", tag: "Thư giãn", why: "Nhạc chậm, không lời giúp hạ nhịp, dễ chìm vào giấc ngủ." },
+];
+
+  </script>
+  <script>
+(() => {
+  "use strict";
+
+  const MODES = window.NHIP_MODES;
+  const LIB = window.NHIP_TRACKS;
+  const ACTS = window.NHIP_ACTIVITIES;
+  const SPEEDS = [1, 1.25, 1.5, 0.75];
+
+  const $ = (s) => document.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("nhip:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("nhip:" + k, JSON.stringify(v)); } catch {} },
+  };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmt = (s) => {
+    if (!isFinite(s) || s < 0) s = 0;
+    s = Math.floor(s);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = String(s % 60).padStart(2, "0");
+    return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+  };
+  const keyOf = (t) => (t.type === "yt" ? "yt:" + t.id : "au:" + t.src);
+  const SHARED = (window.NHIP_SHARED_URL || "").trim().replace(/\/+$/, "");
+  const modeById = (id) => MODES.find((m) => m.id === id) || MODES[1];
+
+  // ---------- State ----------
+  const S = {
+    mode: store.get("mode", "lofi"),
+    filter: "all",
+    query: "",
+    queue: [],
+    qi: -1,
+    current: null,
+    engine: null, // "audio" | "yt"
+    playing: false,
+    shuffle: store.get("shuffle", false),
+    repeat: store.get("repeat", "off"), // off | all | one
+    rate: 1,
+    volume: store.get("volume", 80),
+    muted: false,
+    seeking: false,
+    favs: new Set(store.get("favs", [])),
+    custom: store.get("custom", { lofi: [], pop: [], remix: [] }), // link YouTube người dùng thêm
+    shared: { lofi: [], pop: [], remix: [] }, sharedSig: "",
+    files: { lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
+    dead: new Set(store.get("dead", [])), // bài không phát được → ẩn luôn
+    recommended: null,
+  };
+
+  const audio = $("#audio");
+  audio.preservesPitch = false; // Speed-up / Slowed đúng chất: đổi cả cao độ
+  audio.mozPreservesPitch = false;
+  audio.webkitPreservesPitch = false;
+
+  const tracksOf = (modeId) =>
+    [...(LIB[modeId] || []), ...(S.custom[modeId] || []), ...(S.shared[modeId] || []), ...(S.files[modeId] || [])]
+      .filter((t) => !S.dead.has(keyOf(t)))
+      .map((t) => ({ ...t, mode: modeId }));
+
+  // Bỏ hẳn bài lỗi khỏi danh sách + hàng đợi, rồi phát bài kế
+  function dropDead(t) {
+    const k = keyOf(t);
+    S.dead.add(k);
+    store.set("dead", [...S.dead].filter((x) => !x.startsWith("au:blob:"))); // file trong máy chỉ ẩn trong phiên
+    const i = S.queue.findIndex((x) => keyOf(x) === k);
+    if (i > -1) { S.queue.splice(i, 1); if (i <= S.qi) S.qi--; }
+    renderModes();
+    renderTracks();
+    if (!S.queue.length) { S.current = null; S.engine = null; setPlaying(false); renderNow(); renderPlayer(); return; }
+    setTimeout(() => next(true), 1400);
+  }
+
+  // ---------- YouTube engine ----------
+  let yt = null, ytReady = false, ytPending = null;
+  window.onYouTubeIframeAPIReady = () => {
+    yt = new YT.Player("ytPlayer", {
+      width: "100%",
+      height: "100%",
+      playerVars: { playsinline: 1, rel: 0, controls: 0, modestbranding: 1, iv_load_policy: 3, disablekb: 1, origin: location.origin },
+      events: {
+        onReady: () => {
+          ytReady = true;
+          applyVolume();
+          if (ytPending) { const fn = ytPending; ytPending = null; fn(); }
+        },
+        onStateChange: (e) => {
+          if (S.engine !== "yt") return;
+          if (e.data === YT.PlayerState.PLAYING) {
+            setPlaying(true);
+            if (yt.getPlaybackRate() !== S.rate) yt.setPlaybackRate(S.rate);
+          } else if (e.data === YT.PlayerState.PAUSED) setPlaying(false);
+          else if (e.data === YT.PlayerState.ENDED) onEnded();
+        },
+        onError: (e) => {
+          if (S.engine !== "yt") return;
+          // 100: video bị xoá/riêng tư · 101/150: chủ video chặn phát nhúng
+          if ([100, 101, 150].includes(e.data)) {
+            toast("Bài này không phát được — đã bỏ khỏi danh sách");
+            return dropDead(S.current);
+          }
+          toast(`Không phát được video (mã ${e.data}) — chuyển bài tiếp…`);
+          setTimeout(() => next(true), 1400);
+        },
+      },
+    });
+  };
+  const ytScript = document.createElement("script");
+  ytScript.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(ytScript);
+
+  const withYT = (fn) => (ytReady ? fn() : (ytPending = fn));
+
+  // ---------- Audio engine ----------
+  audio.addEventListener("play", () => S.engine === "audio" && setPlaying(true));
+  audio.addEventListener("pause", () => S.engine === "audio" && setPlaying(false));
+  audio.addEventListener("ended", () => S.engine === "audio" && onEnded());
+  audio.addEventListener("error", () => {
+    if (S.engine !== "audio" || !audio.getAttribute("src")) return;
+    // mã 4: file không tồn tại / không hỗ trợ → bỏ luôn; lỗi mạng thì chỉ chuyển bài
+    if (audio.error && audio.error.code === 4) {
+      toast("Bài này không phát được — đã bỏ khỏi danh sách");
+      return dropDead(S.current);
+    }
+    toast("Không tải được file nhạc — chuyển bài tiếp…");
+    setTimeout(() => next(true), 1400);
+  });
+
+  // ---------- Playback ----------
+  function load(track, autoplay = true) {
+    S.current = track;
+    if (track.type === "yt") {
+      audio.pause();
+      S.engine = "yt";
+      withYT(() => {
+        autoplay ? yt.loadVideoById(track.id) : yt.cueVideoById(track.id);
+        applyVolume();
+      });
+    } else {
+      if (ytReady) yt.pauseVideo();
+      S.engine = "audio";
+      audio.src = track.src;
+      audio.playbackRate = S.rate;
+      applyVolume();
+      if (autoplay) audio.play().catch(() => setPlaying(false));
+    }
+    renderNow();
+    renderPlayer();
+    highlightCurrent();
+    updateMediaSession();
+  }
+
+  function playFrom(list, i) {
+    if (S.mode === "silent") return;
+    S.queue = list.slice();
+    S.qi = i;
+    load(S.queue[i]);
+  }
+
+  function togglePlay() {
+    if (S.mode === "silent") {
+      toast("Bạn đang ở chế độ Yên tĩnh — chọn chế độ khác để nghe nhạc nhé");
+      return;
+    }
+    if (!S.current) {
+      const list = visibleTracks();
+      if (list.length) playFrom(list, S.shuffle ? Math.floor(Math.random() * list.length) : 0);
+      return;
+    }
+    if (S.engine === "audio") audio.paused ? audio.play() : audio.pause();
+    else withYT(() => (yt.getPlayerState() === YT.PlayerState.PLAYING ? yt.pauseVideo() : yt.playVideo()));
+  }
+
+  function pause() {
+    if (S.engine === "audio") audio.pause();
+    else if (ytReady) yt.pauseVideo();
+    setPlaying(false);
+  }
+
+  function onEnded() {
+    if (S.repeat === "one") { seekTo(0); S.engine === "audio" ? audio.play() : yt.playVideo(); return; }
+    next(true);
+  }
+
+  function next(auto = false) {
+    if (!S.queue.length) return;
+    let i;
+    if (S.shuffle && S.queue.length > 1) {
+      do i = Math.floor(Math.random() * S.queue.length); while (i === S.qi);
+    } else {
+      i = S.qi + 1;
+      if (i >= S.queue.length) {
+        if (auto && S.repeat === "off") { setPlaying(false); return; }
+        i = 0;
+      }
+    }
+    S.qi = i;
+    load(S.queue[i]);
+  }
+
+  function prev() {
+    if (!S.queue.length) return;
+    if (getTime().cur > 3) return seekTo(0);
+    S.qi = (S.qi - 1 + S.queue.length) % S.queue.length;
+    load(S.queue[S.qi]);
+  }
+
+  function getTime() {
+    if (S.engine === "audio") return { cur: audio.currentTime || 0, dur: audio.duration || 0, live: false };
+    if (S.engine === "yt" && ytReady && yt.getCurrentTime) {
+      const data = yt.getVideoData ? yt.getVideoData() : {};
+      return { cur: yt.getCurrentTime() || 0, dur: yt.getDuration() || 0, live: !!(S.current?.live || data?.isLive) };
+    }
+    return { cur: 0, dur: 0, live: false };
+  }
+
+  function seekTo(sec) {
+    if (S.engine === "audio") audio.currentTime = sec;
+    else if (ytReady) yt.seekTo(sec, true);
+  }
+
+  function setPlaying(v) {
+    S.playing = v;
+    document.body.classList.toggle("playing", v);
+    $("#playBtn").setAttribute("aria-label", v ? "Tạm dừng" : "Phát");
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = v ? "playing" : "paused";
+  }
+
+  function applyVolume() {
+    const v = S.muted ? 0 : S.volume;
+    audio.volume = v / 100;
+    if (ytReady) { yt.setVolume(S.volume); S.muted ? yt.mute() : yt.unMute(); }
+    const vol = $("#volume");
+    vol.value = v;
+    vol.style.setProperty("--p", v + "%");
+    $("#muteBtn").classList.toggle("on", S.muted);
+  }
+
+  // ---------- Progress loop ----------
+  setInterval(() => {
+    const { cur, dur, live } = getTime();
+    const seek = $("#seek");
+    seek.disabled = live || !dur;
+    $("#durTime").textContent = live ? "LIVE" : fmt(dur);
+    if (!S.seeking) {
+      const p = dur && !live ? (cur / dur) * 1000 : 0;
+      seek.value = p;
+      seek.style.setProperty("--p", p / 10 + "%");
+      $("#curTime").textContent = fmt(cur);
+    }
+  }, 300);
+
+  // ---------- Render ----------
+  function applyAccent(mode) {
+    document.body.dataset.mode = mode.id;
+    document.body.style.setProperty("--a", mode.accent);
+    document.body.style.setProperty("--a2", mode.accent2);
+  }
+
+  function renderModes() {
+    $("#modes").innerHTML = MODES.map((m) => {
+      const n = tracksOf(m.id).length;
+      return `<button class="mode${m.id === S.mode ? " active" : ""}${m.id === S.recommended ? " recommended" : ""}" data-mode="${m.id}" style="--ma:${m.accent};--ma2:${m.accent2}">
+        <div class="mode-top"><span class="mode-no">${m.no}</span><span class="mode-emoji">${m.emoji}</span></div>
+        <div>
+          <h4>${esc(m.name)}</h4>
+          <p>${esc(m.desc)}</p>
+          <div class="count">${m.id === "silent" ? "Bộ đếm Pomodoro" : n + " bài"}</div>
+        </div>
+      </button>`;
+    }).join("");
+  }
+
+  function renderTabs() {
+    const m = modeById(S.mode);
+    const tabs = [["all", "Tất cả"], ...m.tags.map((t) => [t, t]), ["fav", "♡ Yêu thích"], ...(SHARED ? [["shared", "🌐 Cộng đồng"]] : []), ["mine", "Của tôi"]];
+    $("#tabs").innerHTML = tabs
+      .map(([k, l]) => `<button class="tab${S.filter === k ? " active" : ""}" data-filter="${esc(k)}" role="tab">${esc(l)}</button>`)
+      .join("");
+  }
+
+  function visibleTracks() {
+    const q = S.query.trim().toLowerCase();
+    return tracksOf(S.mode).filter((t) => {
+      if (S.filter === "fav" && !S.favs.has(keyOf(t))) return false;
+      if (S.filter === "mine" && !t.custom) return false;
+      if (S.filter === "shared" && !t.shared) return false;
+      if (!["all", "fav", "mine", "shared"].includes(S.filter) && t.tag !== S.filter) return false;
+      return !q || `${t.title} ${t.artist}`.toLowerCase().includes(q);
+    });
+  }
+
+  function renderTracks() {
+    const list = visibleTracks();
+    $("#empty").hidden = list.length > 0;
+    $("#tracks").innerHTML = list.map((t, i) => {
+      const k = keyOf(t);
+      const thumb = t.type === "yt"
+        ? `<div class="t-thumb" style="background-image:url('https://i.ytimg.com/vi/${esc(t.id)}/mqdefault.jpg')"></div>`
+        : `<div class="t-thumb gen">${esc((t.title || "?").trim().charAt(0).toUpperCase())}</div>`;
+      const tag = t.live ? `<span class="t-tag live">● LIVE</span>` : `<span class="t-tag">${esc(t.tag || (t.type === "yt" ? "YouTube" : "File"))}</span>`;
+      return `<li class="track" data-i="${i}" data-key="${esc(k)}" style="animation-delay:${Math.min(i * 25, 300)}ms">
+        <span class="t-no"><span>${String(i + 1).padStart(2, "0")}</span></span>
+        ${thumb}
+        <div class="t-text"><strong>${esc(t.title)}</strong><span>${esc(t.artist)}</span></div>
+        ${tag}
+        <div class="t-btns">
+          <button class="fav${S.favs.has(k) ? " on" : ""}" data-act="fav" aria-label="Yêu thích">${S.favs.has(k) ? "♥" : "♡"}</button>
+          ${t.custom || t.shared ? `<button data-act="del" aria-label="Xoá khỏi danh sách">✕</button>` : ""}
+        </div>
+      </li>`;
+    }).join("");
+    highlightCurrent();
+  }
+
+  function highlightCurrent() {
+    const ck = S.current && keyOf(S.current);
+    document.querySelectorAll(".track").forEach((el) => el.classList.toggle("current", el.dataset.key === ck));
+  }
+
+  function renderNow() {
+    const silent = S.mode === "silent";
+    const t = S.current;
+    $("#silentArt").hidden = !silent;
+    $("#ytWrap").hidden = silent || !(t && t.type === "yt");
+    $("#cover").hidden = silent || (t && t.type === "yt");
+    $("#nowLabel").textContent = silent ? "Chế độ" : "Đang phát";
+    $("#nowTitle").textContent = silent ? "Yên tĩnh hoàn toàn" : t ? t.title : "Chưa chọn bài";
+    $("#nowArtist").textContent = silent
+      ? "Không có âm thanh nào đang phát. Hít sâu, bắt đầu thôi."
+      : t ? t.artist : "Chọn một bài trong danh sách để bắt đầu";
+    $("#vinylLabel").textContent = t && t.type !== "yt" ? (t.title || "").slice(0, 10) : "Tune and task performance";
+    const fav = $("#favNow");
+    fav.hidden = silent || !t;
+    const on = t && S.favs.has(keyOf(t));
+    fav.classList.toggle("on", !!on);
+    fav.textContent = on ? "♥ Đã thích" : "♡ Yêu thích";
+    const link = $("#openYt");
+    link.hidden = silent || !(t && t.type === "yt");
+    if (t && t.type === "yt") link.href = "https://www.youtube.com/watch?v=" + t.id;
+  }
+
+  function renderPlayer() {
+    const t = S.current;
+    $("#pTitle").textContent = t ? t.title : "Tune and task performance";
+    $("#pArtist").textContent = t ? t.artist : "Sẵn sàng phát";
+    $("#pThumb").style.backgroundImage = t && t.type === "yt" ? `url('https://i.ytimg.com/vi/${t.id}/mqdefault.jpg')` : "";
+    $("#shuffleBtn").classList.toggle("on", S.shuffle);
+    const rb = $("#repeatBtn");
+    rb.classList.toggle("on", S.repeat !== "off");
+    rb.querySelector(".one").hidden = S.repeat !== "one";
+    rb.title = { off: "Lặp: tắt", all: "Lặp: cả danh sách", one: "Lặp: một bài" }[S.repeat];
+    const sb = $("#speedBtn");
+    sb.textContent = S.rate.toFixed(S.rate % 1 ? 2 : 1).replace(/0$/, "") + "×";
+    sb.classList.toggle("on", S.rate !== 1);
+  }
+
+  function setMode(id, { filter } = {}) {
+    const m = modeById(id);
+    const wasSilent = S.mode === "silent";
+    S.mode = m.id;
+    S.filter = filter && m.tags.includes(filter) ? filter : "all";
+    S.query = "";
+    $("#search").value = "";
+    store.set("mode", m.id);
+    applyAccent(m);
+    if (m.id === "silent" && S.playing) { pause(); toast("Đã tắt nhạc — tận hưởng sự yên tĩnh 🤫"); }
+    $("#listView").hidden = m.id === "silent";
+    $("#focusView").hidden = m.id !== "silent";
+    $("#modeTitle").textContent = m.name;
+    $("#modeFull").textContent = m.full;
+    $("#addModeName").textContent = m.name;
+    renderModes();
+    renderTabs();
+    renderTracks();
+    renderNow();
+    renderTimer();
+    if (wasSilent && m.id !== "silent" && S.current) toast("Bấm ▶ để tiếp tục bài đang dở");
+  }
+
+  // ---------- Activities ----------
+  function renderActivities() {
+    $("#activities").innerHTML = ACTS.map((a, i) => `<button class="activity" role="listitem" data-i="${i}">${esc(a.label)}</button>`).join("");
+  }
+  $("#activities").addEventListener("click", (e) => {
+    const b = e.target.closest(".activity");
+    if (!b) return;
+    const was = b.classList.contains("active");
+    document.querySelectorAll(".activity").forEach((x) => x.classList.remove("active"));
+    if (was) { S.recommended = null; $("#suggest").hidden = true; renderModes(); return; }
+    b.classList.add("active");
+    const a = ACTS[+b.dataset.i];
+    const m = modeById(a.mode);
+    S.recommended = m.id;
+    $("#suggestText").innerHTML = `<strong>${esc(m.name)}</strong> — ${esc(a.why)}`;
+    $("#suggest").hidden = false;
+    setMode(m.id, { filter: a.tag });
+    $("#modes").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // ---------- Events: modes, list ----------
+  $("#modes").addEventListener("click", (e) => {
+    const b = e.target.closest(".mode");
+    if (b) setMode(b.dataset.mode);
+  });
+  $("#tabs").addEventListener("click", (e) => {
+    const b = e.target.closest(".tab");
+    if (!b) return;
+    S.filter = b.dataset.filter;
+    renderTabs();
+    renderTracks();
+  });
+  $("#search").addEventListener("input", (e) => { S.query = e.target.value; renderTracks(); });
+
+  $("#tracks").addEventListener("click", (e) => {
+    const li = e.target.closest(".track");
+    if (!li) return;
+    const list = visibleTracks();
+    const t = list[+li.dataset.i];
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (act === "fav") return toggleFav(t);
+    if (act === "del") return removeCustom(t);
+    if (S.current && keyOf(S.current) === keyOf(t)) return togglePlay();
+    playFrom(list, +li.dataset.i);
+  });
+
+  $("#playAll").addEventListener("click", () => {
+    const list = visibleTracks();
+    if (!list.length) return toast("Danh sách đang trống");
+    playFrom(list, S.shuffle ? Math.floor(Math.random() * list.length) : 0);
+  });
+
+  function toggleFav(t) {
+    const k = keyOf(t);
+    S.favs.has(k) ? S.favs.delete(k) : S.favs.add(k);
+    store.set("favs", [...S.favs]);
+    toast(S.favs.has(k) ? "Đã thêm vào Yêu thích ♥" : "Đã bỏ khỏi Yêu thích");
+    renderTracks();
+    renderNow();
+  }
+  $("#favNow").addEventListener("click", () => S.current && toggleFav(S.current));
+
+  async function removeCustom(t) {
+    const k = keyOf(t);
+    if (t.shared) {
+      if (!confirm("Xoá bài này khỏi danh sách chung? Mọi người sẽ không còn thấy nó.")) return;
+      try {
+        const r = await fetch(`${SHARED}/tracks/${t.fbKey}.json`, { method: "DELETE" });
+        if (!r.ok) throw new Error("http");
+      } catch { return toast("Không xoá được. Kiểm tra mạng rồi thử lại"); }
+      S.shared[t.mode] = S.shared[t.mode].filter((x) => x.fbKey !== t.fbKey);
+    } else if (t.type === "yt") {
+      S.custom[t.mode] = S.custom[t.mode].filter((x) => keyOf(x) !== k);
+      store.set("custom", S.custom);
+    } else {
+      S.files[t.mode] = S.files[t.mode].filter((x) => keyOf(x) !== k);
+    }
+    toast("Đã xoá khỏi danh sách");
+    renderModes();
+    renderTracks();
+  }
+
+  // ---------- Player bar events ----------
+  $("#playBtn").addEventListener("click", togglePlay);
+  $("#nextBtn").addEventListener("click", () => next());
+  $("#prevBtn").addEventListener("click", prev);
+  $("#shuffleBtn").addEventListener("click", () => {
+    S.shuffle = !S.shuffle;
+    store.set("shuffle", S.shuffle);
+    toast(S.shuffle ? "Đã bật phát ngẫu nhiên" : "Đã tắt phát ngẫu nhiên");
+    renderPlayer();
+  });
+  $("#repeatBtn").addEventListener("click", () => {
+    S.repeat = { off: "all", all: "one", one: "off" }[S.repeat];
+    store.set("repeat", S.repeat);
+    toast({ off: "Tắt lặp lại", all: "Lặp lại cả danh sách", one: "Lặp lại một bài" }[S.repeat]);
+    renderPlayer();
+  });
+  $("#speedBtn").addEventListener("click", () => {
+    S.rate = SPEEDS[(SPEEDS.indexOf(S.rate) + 1) % SPEEDS.length];
+    audio.playbackRate = S.rate;
+    if (ytReady && S.engine === "yt") yt.setPlaybackRate(S.rate);
+    toast(S.rate > 1 ? `Speed-up ${S.rate}× ⚡` : S.rate < 1 ? `Slowed ${S.rate}× 🌙` : "Tốc độ gốc 1×");
+    renderPlayer();
+  });
+
+  const seek = $("#seek");
+  seek.addEventListener("input", () => {
+    S.seeking = true;
+    const { dur } = getTime();
+    seek.style.setProperty("--p", seek.value / 10 + "%");
+    $("#curTime").textContent = fmt((seek.value / 1000) * dur);
+  });
+  seek.addEventListener("change", () => {
+    const { dur } = getTime();
+    seekTo((seek.value / 1000) * dur);
+    S.seeking = false;
+  });
+
+  $("#volume").addEventListener("input", (e) => {
+    S.volume = +e.target.value;
+    S.muted = S.volume === 0;
+    store.set("volume", S.volume);
+    applyVolume();
+  });
+  $("#muteBtn").addEventListener("click", () => { S.muted = !S.muted; applyVolume(); });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.matches("input, textarea") || e.target.closest("dialog[open]")) return;
+    if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+    else if (e.shiftKey && e.key === "ArrowRight") next();
+    else if (e.shiftKey && e.key === "ArrowLeft") prev();
+  });
+
+  function updateMediaSession() {
+    if (!("mediaSession" in navigator) || !S.current) return;
+    const t = S.current;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: t.title,
+      artist: t.artist,
+      album: "Tune and task performance · " + modeById(t.mode).name,
+      artwork: t.type === "yt" ? [{ src: `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`, sizes: "480x360", type: "image/jpeg" }] : [],
+    });
+  }
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", togglePlay);
+    navigator.mediaSession.setActionHandler("pause", togglePlay);
+    navigator.mediaSession.setActionHandler("nexttrack", () => next());
+    navigator.mediaSession.setActionHandler("previoustrack", prev);
+  }
+
+  // ---------- Add music ----------
+  const modal = $("#addModal");
+  $("#addBtn").addEventListener("click", () => { $("#shareRow").hidden = !SHARED; $("#ytUrl").value = ""; modal.showModal(); });
+
+  function parseYouTube(url) {
+    const m = String(url).trim().match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
+    if (m) return m[1];
+    return /^[A-Za-z0-9_-]{11}$/.test(url.trim()) ? url.trim() : null;
+  }
+
+  $("#addYt").addEventListener("click", async () => {
+    const url = $("#ytUrl").value;
+    const id = parseYouTube(url);
+    if (!id) return toast("Link YouTube không hợp lệ");
+    if (tracksOf(S.mode).some((t) => t.type === "yt" && t.id === id)) return toast("Bài này đã có trong danh sách");
+    const btn = $("#addYt");
+    btn.disabled = true;
+    btn.textContent = "Đang lấy thông tin…";
+    let title = "Video YouTube", artist = "YouTube";
+    try {
+      const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent("https://www.youtube.com/watch?v=" + id)}`);
+      if (r.status === 401 || r.status === 403) { toast("Video này không cho phép phát nhúng"); return; }
+      if (!r.ok) { toast("Không tìm thấy video này"); return; }
+      const d = await r.json();
+      title = d.title || title;
+      artist = d.author_name || artist;
+    } catch {
+      /* mạng lỗi: vẫn thêm với tên mặc định */
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Thêm từ YouTube";
+    }
+    let t = { type: "yt", id, title, artist, tag: "Của tôi", custom: true };
+    if (SHARED && $("#shareChk").checked) {
+      try {
+        const r = await fetch(`${SHARED}/tracks.json`, { method: "POST", body: JSON.stringify({ mode: S.mode, id, title: title.slice(0, 120), artist: artist.slice(0, 80), at: Date.now() }) });
+        if (!r.ok) throw new Error("http");
+        const { name } = await r.json();
+        t = { type: "yt", id, title, artist, tag: "Cộng đồng", shared: true, fbKey: name, mode: S.mode };
+        S.shared[S.mode].push(t);
+      } catch {
+        toast("Không chia sẻ được, đã lưu riêng cho máy bạn");
+        S.custom[S.mode].push(t); store.set("custom", S.custom);
+      }
+    } else { S.custom[S.mode].push(t); store.set("custom", S.custom); }
+    if (S.dead.delete(keyOf(t))) store.set("dead", [...S.dead]); // tự thêm lại thì cho thử lại
+    modal.close();
+    S.filter = t.shared ? "shared" : "mine";
+    renderModes(); renderTabs(); renderTracks();
+    toast("Đã thêm “" + title + "”");
+    const list = visibleTracks();
+    playFrom(list, list.length - 1);
+  });
+
+  function addFiles(fileList) {
+    const files = [...fileList].filter((f) => f.type.startsWith("audio/") || /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(f.name));
+    if (!files.length) return toast("Chọn file âm thanh (MP3, M4A, WAV…)");
+    files.forEach((f) => {
+      S.files[S.mode].push({
+        type: "audio",
+        src: URL.createObjectURL(f),
+        title: f.name.replace(/\.[^.]+$/, ""),
+        artist: "File trong máy bạn",
+        tag: "Của tôi",
+        custom: true,
+      });
+    });
+    modal.close();
+    S.filter = "mine";
+    renderModes(); renderTabs(); renderTracks();
+    toast(`Đã thêm ${files.length} bài từ máy bạn`);
+    const list = visibleTracks();
+    playFrom(list, list.length - files.length);
+  }
+  $("#fileInput").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+  const drop = $("#drop");
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
+
+  // ---------- Focus timer (Yên tĩnh) ----------
+  const CIRC = 2 * Math.PI * 88;
+  const today = () => new Date().toISOString().slice(0, 10);
+  const T = {
+    work: 25, brk: 5, phase: "work", running: false, endAt: 0, remaining: 25 * 60,
+    sessions: (() => { const s = store.get("sessions", {}); return s.date === today() ? s.n : 0; })(),
+  };
+  const total = () => (T.phase === "work" ? T.work : T.brk) * 60;
+
+  function renderTimer() {
+    $("#clock").textContent = fmt(T.remaining).padStart(5, "0");
+    $("#phase").textContent = T.phase === "work" ? "Tập trung" : "Nghỉ ngơi";
+    $("#progRing").style.strokeDasharray = CIRC;
+    $("#progRing").style.strokeDashoffset = CIRC * (1 - T.remaining / total());
+    $("#timerStart").textContent = T.running ? "Tạm dừng" : T.remaining < total() ? "Tiếp tục" : T.phase === "work" ? "Bắt đầu" : "Bắt đầu nghỉ";
+    $("#sessions").textContent = `${T.sessions} phiên hôm nay`;
+    const chip = $("#timerChip");
+    chip.hidden = S.mode === "silent" || !(T.running || T.remaining < total());
+    $("#timerChipText").textContent = (T.phase === "work" ? "Tập trung " : "Nghỉ ") + fmt(T.remaining);
+    document.title = T.running ? `${fmt(T.remaining)} · ${T.phase === "work" ? "Tập trung" : "Nghỉ"} — Tune and task performance` : "Tune and task performance — Chọn nhạc cho việc học & làm việc";
+  }
+
+  function finishPhase() {
+    T.running = false;
+    if (T.phase === "work") {
+      T.sessions++;
+      store.set("sessions", { date: today(), n: T.sessions });
+      T.phase = "break";
+      toast(`Xong một phiên! Nghỉ ${T.brk} phút nhé 🎉`);
+    } else {
+      T.phase = "work";
+      toast("Hết giờ nghỉ — quay lại tập trung nào 💪");
+    }
+    T.remaining = total();
+    document.body.classList.add("flash");
+    setTimeout(() => document.body.classList.remove("flash"), 4200);
+  }
+
+  setInterval(() => {
+    if (!T.running) return;
+    T.remaining = Math.max(0, Math.round((T.endAt - Date.now()) / 1000));
+    if (T.remaining === 0) finishPhase();
+    renderTimer();
+  }, 250);
+
+  $("#timerStart").addEventListener("click", () => {
+    if (T.running) { T.running = false; }
+    else { T.running = true; T.endAt = Date.now() + T.remaining * 1000; }
+    renderTimer();
+  });
+  $("#timerReset").addEventListener("click", () => { T.running = false; T.phase = "work"; T.remaining = total(); renderTimer(); });
+  $("#timerSkip").addEventListener("click", () => { T.running = false; T.phase = T.phase === "work" ? "break" : "work"; T.remaining = total(); renderTimer(); });
+  $("#presets").addEventListener("click", (e) => {
+    const b = e.target.closest(".chip");
+    if (!b) return;
+    document.querySelectorAll("#presets .chip").forEach((c) => c.classList.toggle("active", c === b));
+    T.work = +b.dataset.work; T.brk = +b.dataset.break;
+    T.running = false; T.phase = "work"; T.remaining = total();
+    renderTimer();
+  });
+  $("#goal").value = store.get("goal", "");
+  $("#goal").addEventListener("input", (e) => store.set("goal", e.target.value));
+  $("#timerChip").addEventListener("click", () => {
+    setMode("silent");
+    window.scrollTo({ top: $("#modes").offsetTop - 10, behavior: "smooth" });
+  });
+
+  // ---------- Toast ----------
+  let toastTimer;
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+  }
+
+  // ---------- Danh sách chung (Firebase Realtime Database qua REST) ----------
+  async function syncShared(first) {
+    if (!SHARED) return;
+    try {
+      const r = await fetch(`${SHARED}/tracks.json`, { cache: "no-store" });
+      if (!r.ok) throw new Error("http");
+      const data = (await r.json()) || {};
+      const next = { lofi: [], pop: [], remix: [] };
+      Object.entries(data).sort((a, b) => ((a[1] && a[1].at) || 0) - ((b[1] && b[1].at) || 0)).forEach(([k, v]) => {
+        if (!v || !next[v.mode] || !/^[A-Za-z0-9_-]{11}$/.test(v.id || "")) return;
+        next[v.mode].push({ type: "yt", id: v.id, title: String(v.title || "Video YouTube").slice(0, 120), artist: String(v.artist || "YouTube").slice(0, 80), tag: "Cộng đồng", shared: true, fbKey: k, mode: v.mode });
+      });
+      const sig = JSON.stringify(next);
+      if (sig === S.sharedSig) return;
+      S.sharedSig = sig; S.shared = next;
+      renderModes(); renderTabs(); renderTracks();
+    } catch { if (first) toast("Chưa kết nối được danh sách chung"); }
+  }
+
+  // ---------- Boot ----------
+  const h = new Date().getHours();
+  $("#greet").textContent = h < 11 ? "Chào buổi sáng ☀️" : h < 14 ? "Chào buổi trưa 🍜" : h < 18 ? "Chào buổi chiều ☕" : "Chào buổi tối 🌙";
+  if (location.protocol === "file:") setTimeout(() => toast("Hãy mở qua localhost (python -m http.server) để phát được nhạc YouTube"), 800);
+  renderActivities();
+  applyVolume();
+  setMode(S.mode);
+  renderPlayer();
+  syncShared(true);
+  setInterval(() => { if (!document.hidden) syncShared(); }, 30000);
+})();
+
+  </script>
+</body>
+</html>
