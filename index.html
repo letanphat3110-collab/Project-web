@@ -596,6 +596,7 @@ input[type="range"]:disabled { opacity: 0.4; }
       </div>
       <h3 class="prem-title" id="premName">Xóa cô ấy khỏi cuộc đời tôi</h3>
       <div class="prem-qr" id="premQr"></div>
+      <button class="btn primary wide big" id="premBtn" type="button" hidden>✓ Đã quét · Mở khoá</button>
     </form>
   </dialog>
 
@@ -1497,6 +1498,8 @@ window.NHIP_ACTIVITIES = [
     $("#premName").textContent = m.name;
     const box = $("#premQr");
     box.innerHTML = "";
+    box.hidden = false;
+    $("#premBtn").hidden = true;
     premSid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
     const url = location.origin + location.pathname + "?unlock=" + premSid;
     if (window.QRCode) new QRCode(box, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
@@ -1507,8 +1510,11 @@ window.NHIP_ACTIVITIES = [
       try {
         const r = await fetch(`${SHARED}/unlock/${premSid}.json`, { cache: "no-store" });
         if ((await r.json()) === true) {
+          stopPoll();
           fetch(`${SHARED}/unlock/${premSid}.json`, { method: "DELETE" }).catch(() => {});
-          unlockPremium();
+          $("#premQr").hidden = true;
+          $("#premBtn").hidden = false;
+          toast("Đã quét xong ✅ Bấm Mở khoá để vào");
         }
       } catch {}
     }, 2000);
@@ -1523,6 +1529,7 @@ window.NHIP_ACTIVITIES = [
     if (premTarget) setMode(premTarget);
   }
   premModal.addEventListener("close", stopPoll);
+  $("#premBtn").addEventListener("click", unlockPremium);
 
   // ---------- Boot ----------
   const h = new Date().getHours();
@@ -1532,10 +1539,9 @@ window.NHIP_ACTIVITIES = [
   applyVolume();
   const scanned = new URLSearchParams(location.search).get("unlock");
   if (scanned && /^[a-z0-9]{6,32}$/.test(scanned)) {
-    S.premium = true; store.set("premium", true);
     if (SHARED) fetch(`${SHARED}/unlock/${scanned}.json`, { method: "PUT", body: "true" }).catch(() => {});
     history.replaceState(null, "", location.pathname);
-    setTimeout(() => toast("Đã quét mã — Premium đã mở khoá ✨"), 600);
+    setTimeout(() => toast("Đã quét xong ✅ Quay lại thiết bị kia để mở khoá"), 600);
   }
   if (modeById(S.mode).premium && !S.premium) S.mode = "lofi";
   setMode(S.mode);
