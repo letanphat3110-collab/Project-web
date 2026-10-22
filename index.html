@@ -114,7 +114,7 @@ h1 em {
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
 /* ---------- Mode cards ---------- */
-.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 22px; }
 .mode {
   --ma: #fff; --ma2: #888;
   position: relative; overflow: hidden; text-align: left; padding: 20px; min-height: 190px;
@@ -380,6 +380,7 @@ input[type="range"]:disabled { opacity: 0.4; }
 .card{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(26,26,38,.84)}
 .player{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(18,18,28,.92)}
 .vinyl,.eq i,.ring{will-change:transform}
+.mode.locked .mode-emoji{background:rgba(255,255,255,.08);color:var(--muted)}.mode.locked .count{color:var(--muted)}
 .share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
   </style>
 </head>
@@ -584,6 +585,21 @@ input[type="range"]:disabled { opacity: 0.4; }
     </form>
   </dialog>
 
+  <dialog class="modal" id="premiumModal">
+    <form method="dialog" class="modal-inner" id="premiumForm">
+      <div class="modal-head">
+        <h3>🔒 Tính năng Premium</h3>
+        <button class="ic" value="cancel" aria-label="Đóng">✕</button>
+      </div>
+      <p class="muted">Mục <strong id="premName">này</strong> chỉ dành cho thành viên Premium. Nhập mã Premium để mở khoá trên trình duyệt này.</p>
+      <label class="field">
+        <span>Mã Premium</span>
+        <input id="premCode" type="text" autocomplete="off" placeholder="Nhập mã…" />
+      </label>
+      <button class="btn primary wide" id="premBtn" type="button">Mở khoá</button>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <audio id="audio" preload="metadata"></audio>
 
@@ -597,6 +613,9 @@ input[type="range"]:disabled { opacity: 0.4; }
 // "https://ten-du-an-default-rtdb.asia-southeast1.firebasedatabase.app"
 // Để trống = chỉ lưu riêng trên từng máy.
 window.NHIP_SHARED_URL = "https://tune-and-task-performance-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+// Mã mở khoá Premium (đổi thành mã của bạn). Lưu ý: kiểm tra phía trình duyệt, không bảo mật tuyệt đối.
+window.NHIP_PREMIUM_CODE = "PREMIUM2026";
 
 const SH = (n) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`;
 
@@ -645,10 +664,23 @@ window.NHIP_MODES = [
     accent2: "#00e0b0",
     tags: ["Vinahouse", "TikTok", "EDM"],
   },
+  {
+    id: "heal",
+    no: "05",
+    name: "Xóa cô ấy khỏi cuộc đời tôi",
+    full: "Premium · Chia tay · Buông bỏ · Chữa lành",
+    desc: "Khóc cho đã, rồi buông. Playlist riêng cho những ngày cần quên một người.",
+    emoji: "✂",
+    accent: "#ff5e7a",
+    accent2: "#b3123f",
+    tags: ["Buồn", "Chữa lành", "Quên đi"],
+    premium: true,
+  },
 ];
 
 window.NHIP_TRACKS = {
   silent: [],
+  heal: [],
   lofi: [
     { type: "yt", id: "jfKfPfyJRdk", title: "lofi hip hop radio — beats to relax/study to", artist: "Lofi Girl", tag: "Lo-fi", live: true },
     { type: "yt", id: "4xDzrJKXOOY", title: "synthwave radio — beats to chill/game to", artist: "Lofi Girl", tag: "Lo-fi", live: true },
@@ -746,15 +778,16 @@ window.NHIP_ACTIVITIES = [
     muted: false,
     seeking: false,
     favs: new Set(store.get("favs", [])),
-    custom: store.get("custom", { silent: [], lofi: [], pop: [], remix: [] }), // link YouTube người dùng thêm
-    shared: { silent: [], lofi: [], pop: [], remix: [] }, sharedSig: "",
-    files: { silent: [], lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
+    custom: store.get("custom", { silent: [], heal: [], lofi: [], pop: [], remix: [] }), // link YouTube người dùng thêm
+    shared: { silent: [], heal: [], lofi: [], pop: [], remix: [] }, sharedSig: "",
+    files: { silent: [], heal: [], lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
     dead: new Set(store.get("dead", [])), // bài không phát được → ẩn luôn
     hidden: new Set(store.get("hidden", [])), // bài mặc định người dùng đã xoá
     recommended: null,
+    premium: store.get("premium", false),
   };
 
-  ["silent", "lofi", "pop", "remix"].forEach((k) => { S.custom[k] = S.custom[k] || []; });
+  ["silent", "heal", "lofi", "pop", "remix"].forEach((k) => { S.custom[k] = S.custom[k] || []; });
 
   const audio = $("#audio");
   audio.preservesPitch = false; // Speed-up / Slowed đúng chất: đổi cả cao độ
@@ -963,12 +996,12 @@ window.NHIP_ACTIVITIES = [
   function renderModes() {
     $("#modes").innerHTML = MODES.map((m) => {
       const n = tracksOf(m.id).length;
-      return `<button class="mode${m.id === S.mode ? " active" : ""}${m.id === S.recommended ? " recommended" : ""}" data-mode="${m.id}" style="--ma:${m.accent};--ma2:${m.accent2}">
+      return `<button class="mode${m.premium && !S.premium ? " locked" : ""}${m.id === S.mode ? " active" : ""}${m.id === S.recommended ? " recommended" : ""}" data-mode="${m.id}" style="--ma:${m.accent};--ma2:${m.accent2}">
         <div class="mode-top"><span class="mode-no">${m.no}</span><span class="mode-emoji">${m.emoji}</span></div>
         <div>
           <h4>${esc(m.name)}</h4>
           <p>${esc(m.desc)}</p>
-          <div class="count">${m.id === "silent" ? "Pomodoro" + (n ? " · " + n + " bài" : "") : n + " bài"}</div>
+          <div class="count">${m.premium && !S.premium ? "🔒 Chỉ dành cho Premium" : m.id === "silent" ? "Pomodoro" + (n ? " · " + n + " bài" : "") : n + " bài"}</div>
         </div>
       </button>`;
     }).join("");
@@ -1060,6 +1093,7 @@ window.NHIP_ACTIVITIES = [
 
   function setMode(id, { filter } = {}) {
     const m = modeById(id);
+    if (m.premium && !S.premium) { openPremium(m); return; }
     const wasSilent = S.mode === "silent";
     S.mode = m.id;
     S.filter = filter && m.tags.includes(filter) ? filter : "all";
@@ -1420,7 +1454,7 @@ window.NHIP_ACTIVITIES = [
       const r = await fetch(`${SHARED}/tracks.json`, { cache: "no-store" });
       if (!r.ok) throw new Error("http");
       const data = (await r.json()) || {};
-      const next = { silent: [], lofi: [], pop: [], remix: [] };
+      const next = { silent: [], heal: [], lofi: [], pop: [], remix: [] };
       Object.entries(data).sort((a, b) => ((a[1] && a[1].at) || 0) - ((b[1] && b[1].at) || 0)).forEach(([k, v]) => {
         if (!v || !next[v.mode] || !/^[A-Za-z0-9_-]{11}$/.test(v.id || "")) return;
         next[v.mode].push({ type: "yt", id: v.id, title: String(v.title || "Video YouTube").slice(0, 120), artist: String(v.artist || "YouTube").slice(0, 80), tag: "Cộng đồng", shared: true, fbKey: k, mode: v.mode });
@@ -1432,12 +1466,35 @@ window.NHIP_ACTIVITIES = [
     } catch { if (first) toast("Chưa kết nối được danh sách chung"); }
   }
 
+  // ---------- Premium ----------
+  const premModal = $("#premiumModal");
+  let premTarget = null;
+  function openPremium(m) {
+    premTarget = m.id;
+    $("#premName").textContent = "“" + m.name + "”";
+    $("#premCode").value = "";
+    premModal.showModal();
+  }
+  function tryUnlock() {
+    const code = $("#premCode").value.trim();
+    if (!code || code !== String(window.NHIP_PREMIUM_CODE || "")) return toast("Mã Premium không đúng");
+    S.premium = true;
+    store.set("premium", true);
+    premModal.close();
+    toast("Đã mở khoá Premium ✨");
+    renderModes();
+    if (premTarget) setMode(premTarget);
+  }
+  $("#premBtn").addEventListener("click", tryUnlock);
+  $("#premCode").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); tryUnlock(); } });
+
   // ---------- Boot ----------
   const h = new Date().getHours();
   $("#greet").textContent = h < 11 ? "Chào buổi sáng ☀️" : h < 14 ? "Chào buổi trưa 🍜" : h < 18 ? "Chào buổi chiều ☕" : "Chào buổi tối 🌙";
   if (location.protocol === "file:") setTimeout(() => toast("Hãy mở qua localhost (python -m http.server) để phát được nhạc YouTube"), 800);
   renderActivities();
   applyVolume();
+  if (modeById(S.mode).premium && !S.premium) S.mode = "lofi";
   setMode(S.mode);
   renderPlayer();
   syncShared(true);
