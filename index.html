@@ -383,6 +383,7 @@ input[type="range"]:disabled { opacity: 0.4; }
 .mode.locked .mode-emoji{background:rgba(255,255,255,.08);color:var(--muted)}.mode.locked .count{color:var(--muted)}
 .prem-title{font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:-0.045em;line-height:1.02;text-align:center;margin:18px 0 20px;background:linear-gradient(100deg,#ff5e7a,#ffb3c1);-webkit-background-clip:text;background-clip:text;color:transparent}
 .prem-qr{display:grid;place-items:center;margin-bottom:20px}.prem-qr img{width:100%;max-width:280px;background:#fff;padding:12px;border-radius:18px}
+.prem-qr{background:#fff;padding:14px;border-radius:18px;width:fit-content;margin:0 auto 6px;display:block}.prem-qr img{width:220px;max-width:100%;padding:0;background:none;border-radius:0;display:block}
 .share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
   </style>
 </head>
@@ -594,17 +595,14 @@ input[type="range"]:disabled { opacity: 0.4; }
         <button class="ic" value="cancel" aria-label="Đóng">✕</button>
       </div>
       <h3 class="prem-title" id="premName">Xóa cô ấy khỏi cuộc đời tôi</h3>
-      <div class="prem-qr">
-        <img id="premQr" src="qr.png" alt="Mã QR Premium" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />
-        <p class="muted" hidden>Chưa có ảnh <strong>qr.png</strong> cạnh file index.html</p>
-      </div>
-      <button class="btn primary wide big" id="premBtn" type="button">Tôi đã quét mã · Mở khoá</button>
+      <div class="prem-qr" id="premQr"></div>
     </form>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <audio id="audio" preload="metadata"></audio>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
 // Thư viện nhạc mặc định cho từng chế độ.
 // type "yt"    → phát qua YouTube IFrame Player (id = video id)
@@ -1492,20 +1490,39 @@ window.NHIP_ACTIVITIES = [
   // ---------- Premium ----------
   const premModal = $("#premiumModal");
   let premTarget = null;
+  let premSid = "", premPoll = null;
+  const stopPoll = () => { clearInterval(premPoll); premPoll = null; };
   function openPremium(m) {
     premTarget = m.id;
     $("#premName").textContent = m.name;
+    const box = $("#premQr");
+    box.innerHTML = "";
+    premSid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    const url = location.origin + location.pathname + "?unlock=" + premSid;
+    if (window.QRCode) new QRCode(box, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
     premModal.showModal();
+    if (!SHARED) return;
+    stopPoll();
+    premPoll = setInterval(async () => {
+      try {
+        const r = await fetch(`${SHARED}/unlock/${premSid}.json`, { cache: "no-store" });
+        if ((await r.json()) === true) {
+          fetch(`${SHARED}/unlock/${premSid}.json`, { method: "DELETE" }).catch(() => {});
+          unlockPremium();
+        }
+      } catch {}
+    }, 2000);
   }
-  function tryUnlock() {
+  function unlockPremium() {
+    stopPoll();
     S.premium = true;
     store.set("premium", true);
-    premModal.close();
-    toast("Đã mở khoá Premium ✨");
+    if (premModal.open) premModal.close();
+    toast("Đã quét mã — mở khoá Premium ✨");
     renderModes();
     if (premTarget) setMode(premTarget);
   }
-  $("#premBtn").addEventListener("click", tryUnlock);
+  premModal.addEventListener("close", stopPoll);
 
   // ---------- Boot ----------
   const h = new Date().getHours();
@@ -1513,6 +1530,13 @@ window.NHIP_ACTIVITIES = [
   if (location.protocol === "file:") setTimeout(() => toast("Hãy mở qua localhost (python -m http.server) để phát được nhạc YouTube"), 800);
   renderActivities();
   applyVolume();
+  const scanned = new URLSearchParams(location.search).get("unlock");
+  if (scanned && /^[a-z0-9]{6,32}$/.test(scanned)) {
+    S.premium = true; store.set("premium", true);
+    if (SHARED) fetch(`${SHARED}/unlock/${scanned}.json`, { method: "PUT", body: "true" }).catch(() => {});
+    history.replaceState(null, "", location.pathname);
+    setTimeout(() => toast("Đã quét mã — Premium đã mở khoá ✨"), 600);
+  }
   if (modeById(S.mode).premium && !S.premium) S.mode = "lofi";
   setMode(S.mode);
   renderPlayer();
