@@ -372,6 +372,14 @@ input[type="range"]:disabled { opacity: 0.4; }
   .p-thumb { width: 44px; height: 44px; }
 }
 
+#panel{display:flex;flex-direction:column}#focusView{order:-1;margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--card-b)}
+/* Giảm lag: bỏ hiệu ứng nặng GPU */
+.b1,.b2{animation:none}
+.blob{filter:blur(70px);will-change:auto}
+.grain{display:none}
+.card{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(26,26,38,.84)}
+.player{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(18,18,28,.92)}
+.vinyl,.eq i,.ring{will-change:transform}
 .share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
   </style>
 </head>
@@ -445,6 +453,7 @@ input[type="range"]:disabled { opacity: 0.4; }
             <div class="panel-actions">
               <button class="btn primary" id="playAll">▶ Phát tất cả</button>
               <button class="btn ghost" id="addBtn">＋ Thêm nhạc</button>
+              <button class="btn ghost" id="restoreBtn">↺ Khôi phục</button>
             </div>
           </div>
           <div class="toolbar">
@@ -597,7 +606,7 @@ window.NHIP_MODES = [
     no: "01",
     name: "Yên tĩnh",
     full: "Yên tĩnh hoàn toàn",
-    desc: "Không nhạc, không âm thanh. Chỉ bạn và một bộ đếm giờ tập trung.",
+    desc: "Mặc định không âm thanh, chỉ có bộ đếm giờ tập trung. Muốn thì tự thêm nhạc nền.",
     emoji: "◯",
     accent: "#9fd8ff",
     accent2: "#5b7cfa",
@@ -737,12 +746,15 @@ window.NHIP_ACTIVITIES = [
     muted: false,
     seeking: false,
     favs: new Set(store.get("favs", [])),
-    custom: store.get("custom", { lofi: [], pop: [], remix: [] }), // link YouTube người dùng thêm
-    shared: { lofi: [], pop: [], remix: [] }, sharedSig: "",
-    files: { lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
+    custom: store.get("custom", { silent: [], lofi: [], pop: [], remix: [] }), // link YouTube người dùng thêm
+    shared: { silent: [], lofi: [], pop: [], remix: [] }, sharedSig: "",
+    files: { silent: [], lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
     dead: new Set(store.get("dead", [])), // bài không phát được → ẩn luôn
+    hidden: new Set(store.get("hidden", [])), // bài mặc định người dùng đã xoá
     recommended: null,
   };
+
+  ["silent", "lofi", "pop", "remix"].forEach((k) => { S.custom[k] = S.custom[k] || []; });
 
   const audio = $("#audio");
   audio.preservesPitch = false; // Speed-up / Slowed đúng chất: đổi cả cao độ
@@ -751,7 +763,7 @@ window.NHIP_ACTIVITIES = [
 
   const tracksOf = (modeId) =>
     [...(LIB[modeId] || []), ...(S.custom[modeId] || []), ...(S.shared[modeId] || []), ...(S.files[modeId] || [])]
-      .filter((t) => !S.dead.has(keyOf(t)))
+      .filter((t) => !S.dead.has(keyOf(t)) && !S.hidden.has(keyOf(t)))
       .map((t) => ({ ...t, mode: modeId }));
 
   // Bỏ hẳn bài lỗi khỏi danh sách + hàng đợi, rồi phát bài kế
@@ -847,17 +859,12 @@ window.NHIP_ACTIVITIES = [
   }
 
   function playFrom(list, i) {
-    if (S.mode === "silent") return;
     S.queue = list.slice();
     S.qi = i;
     load(S.queue[i]);
   }
 
   function togglePlay() {
-    if (S.mode === "silent") {
-      toast("Bạn đang ở chế độ Yên tĩnh — chọn chế độ khác để nghe nhạc nhé");
-      return;
-    }
     if (!S.current) {
       const list = visibleTracks();
       if (list.length) playFrom(list, S.shuffle ? Math.floor(Math.random() * list.length) : 0);
@@ -961,7 +968,7 @@ window.NHIP_ACTIVITIES = [
         <div>
           <h4>${esc(m.name)}</h4>
           <p>${esc(m.desc)}</p>
-          <div class="count">${m.id === "silent" ? "Bộ đếm Pomodoro" : n + " bài"}</div>
+          <div class="count">${m.id === "silent" ? "Pomodoro" + (n ? " · " + n + " bài" : "") : n + " bài"}</div>
         </div>
       </button>`;
     }).join("");
@@ -1002,7 +1009,7 @@ window.NHIP_ACTIVITIES = [
         ${tag}
         <div class="t-btns">
           <button class="fav${S.favs.has(k) ? " on" : ""}" data-act="fav" aria-label="Yêu thích">${S.favs.has(k) ? "♥" : "♡"}</button>
-          ${t.custom || t.shared ? `<button data-act="del" aria-label="Xoá khỏi danh sách">✕</button>` : ""}
+          <button data-act="del" aria-label="Xoá khỏi danh sách">✕</button>
         </div>
       </li>`;
     }).join("");
@@ -1015,8 +1022,8 @@ window.NHIP_ACTIVITIES = [
   }
 
   function renderNow() {
-    const silent = S.mode === "silent";
     const t = S.current;
+    const silent = S.mode === "silent" && !(t && t.mode === "silent");
     $("#silentArt").hidden = !silent;
     $("#ytWrap").hidden = silent || !(t && t.type === "yt");
     $("#cover").hidden = silent || (t && t.type === "yt");
@@ -1060,11 +1067,11 @@ window.NHIP_ACTIVITIES = [
     $("#search").value = "";
     store.set("mode", m.id);
     applyAccent(m);
-    if (m.id === "silent" && S.playing) { pause(); toast("Đã tắt nhạc — tận hưởng sự yên tĩnh 🤫"); }
-    $("#listView").hidden = m.id === "silent";
+    if (m.id === "silent" && S.playing && S.current && S.current.mode !== "silent") { pause(); toast("Đã tắt nhạc — tận hưởng sự yên tĩnh 🤫"); }
+    $("#listView").hidden = false;
     $("#focusView").hidden = m.id !== "silent";
-    $("#modeTitle").textContent = m.name;
-    $("#modeFull").textContent = m.full;
+    $("#modeTitle").textContent = m.id === "silent" ? "Nhạc nền của bạn" : m.name;
+    $("#modeFull").textContent = m.id === "silent" ? "Tuỳ chọn · Mặc định không phát gì" : m.full;
     $("#addModeName").textContent = m.name;
     renderModes();
     renderTabs();
@@ -1126,6 +1133,14 @@ window.NHIP_ACTIVITIES = [
     playFrom(list, S.shuffle ? Math.floor(Math.random() * list.length) : 0);
   });
 
+  $("#restoreBtn").addEventListener("click", () => {
+    if (!S.hidden.size) return toast("Chưa có bài nào bị xoá");
+    S.hidden.clear();
+    store.set("hidden", []);
+    renderModes(); renderTracks();
+    toast("Đã khôi phục các bài đã xoá");
+  });
+
   function toggleFav(t) {
     const k = keyOf(t);
     S.favs.has(k) ? S.favs.delete(k) : S.favs.add(k);
@@ -1145,11 +1160,27 @@ window.NHIP_ACTIVITIES = [
         if (!r.ok) throw new Error("http");
       } catch { return toast("Không xoá được. Kiểm tra mạng rồi thử lại"); }
       S.shared[t.mode] = S.shared[t.mode].filter((x) => x.fbKey !== t.fbKey);
-    } else if (t.type === "yt") {
+    } else if (t.custom && t.type === "yt") {
       S.custom[t.mode] = S.custom[t.mode].filter((x) => keyOf(x) !== k);
       store.set("custom", S.custom);
-    } else {
+    } else if (t.custom) {
       S.files[t.mode] = S.files[t.mode].filter((x) => keyOf(x) !== k);
+    } else {
+      S.hidden.add(k); // bài mặc định: chỉ ẩn
+      store.set("hidden", [...S.hidden]);
+    }
+    S.favs.delete(k); store.set("favs", [...S.favs]);
+
+    // gỡ khỏi hàng đợi; nếu đang phát bài này thì sang bài kế
+    const i = S.queue.findIndex((x) => keyOf(x) === k);
+    if (i > -1) {
+      S.queue.splice(i, 1);
+      if (i < S.qi) S.qi--;
+      else if (i === S.qi) {
+        S.qi--;
+        if (S.queue.length) next();
+        else { pause(); S.current = null; S.engine = null; renderNow(); renderPlayer(); }
+      }
     }
     toast("Đã xoá khỏi danh sách");
     renderModes();
@@ -1389,7 +1420,7 @@ window.NHIP_ACTIVITIES = [
       const r = await fetch(`${SHARED}/tracks.json`, { cache: "no-store" });
       if (!r.ok) throw new Error("http");
       const data = (await r.json()) || {};
-      const next = { lofi: [], pop: [], remix: [] };
+      const next = { silent: [], lofi: [], pop: [], remix: [] };
       Object.entries(data).sort((a, b) => ((a[1] && a[1].at) || 0) - ((b[1] && b[1].at) || 0)).forEach(([k, v]) => {
         if (!v || !next[v.mode] || !/^[A-Za-z0-9_-]{11}$/.test(v.id || "")) return;
         next[v.mode].push({ type: "yt", id: v.id, title: String(v.title || "Video YouTube").slice(0, 120), artist: String(v.artist || "YouTube").slice(0, 80), tag: "Cộng đồng", shared: true, fbKey: k, mode: v.mode });
