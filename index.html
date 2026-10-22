@@ -381,6 +381,8 @@ input[type="range"]:disabled { opacity: 0.4; }
 .player{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:rgba(18,18,28,.92)}
 .vinyl,.eq i,.ring{will-change:transform}
 .mode.locked .mode-emoji{background:rgba(255,255,255,.08);color:var(--muted)}.mode.locked .count{color:var(--muted)}
+.prem-title{font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:-0.045em;line-height:1.02;text-align:center;margin:18px 0 20px;background:linear-gradient(100deg,#ff5e7a,#ffb3c1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.prem-qr{display:grid;place-items:center;margin-bottom:20px}.prem-qr img{width:100%;max-width:280px;background:#fff;padding:12px;border-radius:18px}
 .share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
   </style>
 </head>
@@ -586,17 +588,17 @@ input[type="range"]:disabled { opacity: 0.4; }
   </dialog>
 
   <dialog class="modal" id="premiumModal">
-    <form method="dialog" class="modal-inner" id="premiumForm">
+    <form method="dialog" class="modal-inner prem" id="premiumForm" style="--a:#ff5e7a">
       <div class="modal-head">
-        <h3>🔒 Tính năng Premium</h3>
+        <span class="eyebrow small" style="margin:0">🔒 Premium</span>
         <button class="ic" value="cancel" aria-label="Đóng">✕</button>
       </div>
-      <p class="muted">Mục <strong id="premName">này</strong> chỉ dành cho thành viên Premium. Nhập mã Premium để mở khoá trên trình duyệt này.</p>
-      <label class="field">
-        <span>Mã Premium</span>
-        <input id="premCode" type="text" autocomplete="off" placeholder="Nhập mã…" />
-      </label>
-      <button class="btn primary wide" id="premBtn" type="button">Mở khoá</button>
+      <h3 class="prem-title" id="premName">Xóa cô ấy khỏi cuộc đời tôi</h3>
+      <div class="prem-qr">
+        <img id="premQr" src="qr.png" alt="Mã QR Premium" onerror="this.hidden=true;this.nextElementSibling.hidden=false" />
+        <p class="muted" hidden>Chưa có ảnh <strong>qr.png</strong> cạnh file index.html</p>
+      </div>
+      <button class="btn primary wide big" id="premBtn" type="button">Tôi đã quét mã · Mở khoá</button>
     </form>
   </dialog>
 
@@ -758,6 +760,7 @@ window.NHIP_ACTIVITIES = [
     return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
   };
   const keyOf = (t) => (t.type === "yt" ? "yt:" + t.id : "au:" + t.src);
+  const fbSafe = (k) => k.replace(/[^A-Za-z0-9_-]/g, "_"); // khoá hợp lệ cho Firebase
   const SHARED = (window.NHIP_SHARED_URL || "").trim().replace(/\/+$/, "");
   const modeById = (id) => MODES.find((m) => m.id === id) || MODES[1];
 
@@ -782,7 +785,8 @@ window.NHIP_ACTIVITIES = [
     shared: { silent: [], heal: [], lofi: [], pop: [], remix: [] }, sharedSig: "",
     files: { silent: [], heal: [], lofi: [], pop: [], remix: [] }, // file trong máy, chỉ tồn tại trong phiên
     dead: new Set(store.get("dead", [])), // bài không phát được → ẩn luôn
-    hidden: new Set(store.get("hidden", [])), // bài mặc định người dùng đã xoá
+    hidden: new Set(store.get("hidden", [])), // bài mặc định người dùng đã ẩn (riêng máy này)
+    removed: new Set(), // bài mặc định đã xoá cho cả cộng đồng (lấy từ Firebase)
     recommended: null,
     premium: store.get("premium", false),
   };
@@ -796,7 +800,7 @@ window.NHIP_ACTIVITIES = [
 
   const tracksOf = (modeId) =>
     [...(LIB[modeId] || []), ...(S.custom[modeId] || []), ...(S.shared[modeId] || []), ...(S.files[modeId] || [])]
-      .filter((t) => !S.dead.has(keyOf(t)) && !S.hidden.has(keyOf(t)))
+      .filter((t) => !S.dead.has(keyOf(t)) && !S.hidden.has(keyOf(t)) && !S.removed.has(fbSafe(keyOf(t))))
       .map((t) => ({ ...t, mode: modeId }));
 
   // Bỏ hẳn bài lỗi khỏi danh sách + hàng đợi, rồi phát bài kế
@@ -1167,8 +1171,16 @@ window.NHIP_ACTIVITIES = [
     playFrom(list, S.shuffle ? Math.floor(Math.random() * list.length) : 0);
   });
 
-  $("#restoreBtn").addEventListener("click", () => {
-    if (!S.hidden.size) return toast("Chưa có bài nào bị xoá");
+  $("#restoreBtn").addEventListener("click", async () => {
+    if (!S.hidden.size && !S.removed.size) return toast("Chưa có bài nào bị xoá");
+    if (S.removed.size) {
+      if (!confirm("Khôi phục tất cả bài mặc định đã xoá cho mọi người?")) return;
+      try {
+        const r = await fetch(`${SHARED}/removed.json`, { method: "DELETE" });
+        if (!r.ok) throw new Error("http");
+      } catch { return toast("Không khôi phục được. Kiểm tra mạng rồi thử lại"); }
+      S.removed.clear();
+    }
     S.hidden.clear();
     store.set("hidden", []);
     renderModes(); renderTracks();
@@ -1199,8 +1211,15 @@ window.NHIP_ACTIVITIES = [
       store.set("custom", S.custom);
     } else if (t.custom) {
       S.files[t.mode] = S.files[t.mode].filter((x) => keyOf(x) !== k);
+    } else if (SHARED) {
+      if (!confirm("Xoá bài mặc định này cho TẤT CẢ mọi người? Mọi người sẽ không còn thấy nó nữa.")) return;
+      try {
+        const r = await fetch(`${SHARED}/removed/${fbSafe(k)}.json`, { method: "PUT", body: "true" });
+        if (!r.ok) throw new Error("http");
+      } catch { return toast("Không xoá được. Kiểm tra mạng hoặc quyền ghi của Firebase"); }
+      S.removed.add(fbSafe(k));
     } else {
-      S.hidden.add(k); // bài mặc định: chỉ ẩn
+      S.hidden.add(k); // chưa có Firebase: chỉ ẩn trên máy này
       store.set("hidden", [...S.hidden]);
     }
     S.favs.delete(k); store.set("favs", [...S.favs]);
@@ -1451,17 +1470,21 @@ window.NHIP_ACTIVITIES = [
   async function syncShared(first) {
     if (!SHARED) return;
     try {
-      const r = await fetch(`${SHARED}/tracks.json`, { cache: "no-store" });
-      if (!r.ok) throw new Error("http");
+      const [r, rr] = await Promise.all([
+        fetch(`${SHARED}/tracks.json`, { cache: "no-store" }),
+        fetch(`${SHARED}/removed.json`, { cache: "no-store" }),
+      ]);
+      if (!r.ok || !rr.ok) throw new Error("http");
       const data = (await r.json()) || {};
+      const rem = (await rr.json()) || {};
       const next = { silent: [], heal: [], lofi: [], pop: [], remix: [] };
       Object.entries(data).sort((a, b) => ((a[1] && a[1].at) || 0) - ((b[1] && b[1].at) || 0)).forEach(([k, v]) => {
         if (!v || !next[v.mode] || !/^[A-Za-z0-9_-]{11}$/.test(v.id || "")) return;
         next[v.mode].push({ type: "yt", id: v.id, title: String(v.title || "Video YouTube").slice(0, 120), artist: String(v.artist || "YouTube").slice(0, 80), tag: "Cộng đồng", shared: true, fbKey: k, mode: v.mode });
       });
-      const sig = JSON.stringify(next);
+      const sig = JSON.stringify([next, Object.keys(rem)]);
       if (sig === S.sharedSig) return;
-      S.sharedSig = sig; S.shared = next;
+      S.sharedSig = sig; S.shared = next; S.removed = new Set(Object.keys(rem));
       renderModes(); renderTabs(); renderTracks();
     } catch { if (first) toast("Chưa kết nối được danh sách chung"); }
   }
@@ -1471,13 +1494,10 @@ window.NHIP_ACTIVITIES = [
   let premTarget = null;
   function openPremium(m) {
     premTarget = m.id;
-    $("#premName").textContent = "“" + m.name + "”";
-    $("#premCode").value = "";
+    $("#premName").textContent = m.name;
     premModal.showModal();
   }
   function tryUnlock() {
-    const code = $("#premCode").value.trim();
-    if (!code || code !== String(window.NHIP_PREMIUM_CODE || "")) return toast("Mã Premium không đúng");
     S.premium = true;
     store.set("premium", true);
     premModal.close();
@@ -1486,7 +1506,6 @@ window.NHIP_ACTIVITIES = [
     if (premTarget) setMode(premTarget);
   }
   $("#premBtn").addEventListener("click", tryUnlock);
-  $("#premCode").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); tryUnlock(); } });
 
   // ---------- Boot ----------
   const h = new Date().getHours();
