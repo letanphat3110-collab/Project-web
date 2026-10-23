@@ -1548,6 +1548,7 @@ const stopPoll = () => { clearInterval(premPoll); premPoll = null; };
 function openPremium(m) {
   premTarget = m.id;
   $("#premName").textContent = m.name;
+  stopPoll();
   $("#premPay").hidden = false;
   $("#premStep").hidden = true;
   premModal.showModal();
@@ -1557,6 +1558,7 @@ function startPay() {
   // Ẩn nút thanh toán, hiện bước chứa mã QR MoMo
   $("#premPay").hidden = true;
   $("#premStep").hidden = false;
+  $("#premBtn").hidden = false;
 }
 
 function confirmTransfer() {
