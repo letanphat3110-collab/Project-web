@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Không thể xóa cô ấy đâu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #08090c;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Container chứa chữ & meme bay phía sau background */
+        .bg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Dòng chữ bay mờ 50% ở background */
+        .floating-text {
+            position: absolute;
+            bottom: -120px;
+            white-space: nowrap;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 400;
+            user-select: none;
+            will-change: transform;
+            animation: floatUp linear infinite;
+        }
+
+        /* Hình ảnh meme bay mờ 50% khung 1:1 */
+        .floating-img {
+            position: absolute;
+            bottom: -150px;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 16px;
+            opacity: 0.5;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            user-select: none;
+            will-change: transform;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 0.5;
+            }
+            85% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(8deg);
+                opacity: 0;
+            }
+        }
+
+        /* Khung kính mờ Glassmorphic ở trung tâm */
+        .glass-card {
+            background: rgba(18, 20, 29, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Biểu tượng lỗi [!] nổi bật nhấp nháy */
+        .error-badge {
+            width: 36px;
+            height: 36px;
+            background-color: #ef4444;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 15px #ef4444;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 8px #ef4444; }
+            100% { transform: scale(1.15); box-shadow: 0 0 22px #ef4444; }
+        }
+
+        /* Container chứa các Pop-up lỗi liên tục xuất hiện */
+        .popup-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* Hộp thoại Pop-up dạng System/Windows lỗi */
+        .error-popup {
+            position: absolute;
+            min-width: 260px;
+            max-width: 340px;
+            background: #12131a;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(239, 68, 68, 0.4);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            pointer-events: auto;
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, popOut 0.3s ease-in forwards;
+            animation-delay: 0s, var(--lifetime);
+        }
+
+        .popup-header {
+            background: #ef4444;
+            color: #ffffff;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .popup-body {
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #f87171;
+            font-size: 0.85rem;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes popOut {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nền chứa chữ và ảnh meme 1:1 bay phía sau (mờ 50%) -->
+    <div class="bg-container" id="bgContainer"></div>
+
+    <!-- Tầng chứa các Pop-up lỗi nhảy khắp màn hình -->
+    <div class="popup-layer" id="popupLayer"></div>
+
+    <!-- Khối chính trung tâm: Căn trên cùng 1 hàng ngang -->
+    <main class="relative z-10 flex items-center gap-4 px-6 py-4 sm:px-8 sm:py-5 rounded-full glass-card max-w-full mx-4 transition-all duration-300">
+        <!-- Biểu tượng cảnh báo lỗi [!] -->
+        <div class="error-badge">!</div>
+
+        <!-- Dòng chữ chính căn trên cùng 1 hàng -->
+        <h1 class="text-lg sm:text-xl md:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-pink-200 to-white whitespace-nowrap drop-shadow-md">
+            Không thể xóa cô ấy đâu
+        </h1>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgContainer = document.getElementById('bgContainer');
+            const popupLayer = document.getElementById('popupLayer');
+
+            const textContent = "Không thể xóa cô ấy đâu";
+
+            // Danh sách URL ảnh meme chuẩn
+            const memeImages = [
+                'https://24hstore.vn/upload_images/images/anh-meme-meo/meme-meo-cuoi-chi-tay-sang-chanh.jpg',
+                'https://24hstore.vn/upload_images/images/anh-meme-meo/meme-meo-cuoi-chi-tay-mau-sac.jpg',
+                'https://cdn-media.sforum.vn/storage/app/media/ctv_seo3/meme-cuoi-8.jpg',
+                'https://thuvienmeme.com/wp-content/uploads/2024/05/meme-co-gai-chi-tay-cuoi-haha.jpg',
+                'https://cdn-media.sforum.vn/storage/app/media/ctv_seo3/meme-cuoi-9.jpg'
+            ];
+
+            // Danh sách thông báo lỗi Pop-up
+            const errorTitles = [
+                'CRITICAL SYSTEM ERROR',
+                'ACCESS DENIED',
+                'DELETE FAILED',
+                'SECURITY ALERT',
+                'ACTION BLOCKED',
+                'SYSTEM RESTRICTION'
+            ];
+
+            const errorMessages = [
+                'ERROR 404: Target cannot be deleted!',
+                'Cannot delete her! File is read-only forever.',
+                'Access Denied: Protected emotional memory.',
+                'Operation Aborted: Memory locked permanently.',
+                'System Failure: She is irreplaceable!',
+                'FATAL ERROR: Unable to locate delete button.'
+            ];
+
+            // 1. Hàm tạo chữ bay ở Background
+            function createFloatingText() {
+                const el = document.createElement('div');
+                el.classList.add('floating-text');
+                el.innerText = textContent;
+
+                const fontSize = Math.floor(Math.random() * 16) + 14;
+                el.style.fontSize = `${fontSize}px`;
+
+                const leftPos = Math.random() * 90;
+                el.style.left = `${leftPos}%`;
+
+                const duration = Math.random() * 8 + 7;
+                el.style.animationDuration = `${duration}s`;
+
+                bgContainer.appendChild(el);
+
+                setTimeout(() => {
+                    el.remove();
+                }, duration * 1000);
+            }
+
+            // 2. Hàm tạo ảnh Meme 1:1 bay ở Background
+            function createFloatingImage() {
+                const img = document.createElement('img');
+                img.classList.add('floating-img');
+                
+                const randomSrc = memeImages[Math.floor(Math.random() * memeImages.length)];
+                img.src = randomSrc;
+
+                img.onerror = function() {
+                    this.remove();
+                };
+
+                const size = Math.floor(Math.random() * 45) + 65;
+                img.style.width = `${size}px`;
+                img.style.height = `${size}px`;
+
+                const leftPos = Math.random() * 88;
+                img.style.left = `${leftPos}%`;
+
+                const duration = Math.random() * 9 + 8;
+                img.style.animationDuration = `${duration}s`;
+
+                bgContainer.appendChild(img);
+
+                setTimeout(() => {
+                    img.remove();
+                }, duration * 1000);
+            }
+
+            // 3. Hàm tạo Pop-up lỗi System/Windows nhảy ngẫu nhiên
+            function createErrorPopup() {
+                const popup = document.createElement('div');
+                popup.classList.add('error-popup');
+
+                const title = errorTitles[Math.floor(Math.random() * errorTitles.length)];
+                const msg = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+
+                // Thời gian sống của pop-up (2.5s - 4.5s)
+                const lifetime = (Math.random() * 2 + 2.5).toFixed(1);
+                popup.style.setProperty('--lifetime', `${lifetime}s`);
+
+                popup.innerHTML = `
+                    <div class="popup-header">
+                        <span>⚠️ ${title}</span>
+                        <span>[X]</span>
+                    </div>
+                    <div class="popup-body">
+                        <span style="font-size: 1.4rem;">🛑</span>
+                        <span>${msg}</span>
+                    </div>
+                `;
+
+                // Vị trí ngẫu nhiên trên màn hình (tránh tràn lề)
+                const maxX = window.innerWidth - 320;
+                const maxY = window.innerHeight - 120;
+
+                const posX = Math.max(20, Math.floor(Math.random() * maxX));
+                const posY = Math.max(20, Math.floor(Math.random() * maxY));
+
+                popup.style.left = `${posX}px`;
+                popup.style.top = `${posY}px`;
+
+                popupLayer.appendChild(popup);
+
+                // Tự động xóa sau khi animation kết thúc
+                setTimeout(() => {
+                    popup.remove();
+                }, (parseFloat(lifetime) + 0.3) * 1000);
+            }
+
+            // Tạo các phần tử ngẫu nhiên liên tục
+            for (let i = 0; i < 12; i++) {
+                setTimeout(createFloatingText, i * 400);
+            }
+            for (let j = 0; j < 8; j++) {
+                setTimeout(createFloatingImage, j * 700);
+            }
+
+            // Vòng lặp sinh ra liên tục
+            setInterval(createFloatingText, 600);
+            setInterval(createFloatingImage, 1100);
+
+            // Sinh ra Pop-up lỗi nhảy liên tục khắp màn hình
+            setInterval(createErrorPopup, 450);
+        });
+    </script>
+</body>
+</html>
