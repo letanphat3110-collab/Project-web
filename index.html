@@ -382,8 +382,11 @@ input[type="range"]:disabled { opacity: 0.4; }
 .vinyl,.eq i,.ring{will-change:transform}
 .mode.locked .mode-emoji{background:rgba(255,255,255,.08);color:var(--muted)}.mode.locked .count{color:var(--muted)}
 .prem-title{font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:-0.045em;line-height:1.02;text-align:center;margin:18px 0 20px;background:linear-gradient(100deg,#ff5e7a,#ffb3c1);-webkit-background-clip:text;background-clip:text;color:transparent}
-.prem-qr{display:grid;place-items:center;margin-bottom:20px}.prem-qr img{width:100%;max-width:280px;background:#fff;padding:12px;border-radius:18px}
-.prem-qr{background:#fff;padding:14px;border-radius:18px;width:fit-content;margin:0 auto 6px;display:block}.prem-qr img{width:220px;max-width:100%;padding:0;background:none;border-radius:0;display:block}
+.prem-qr{background:none;padding:0;margin:0 auto 16px;width:auto;display:block}
+.prem-qr img{width:100%;max-width:320px;border-radius:18px;margin:0 auto;display:block}
+#premQr{background:#fff;padding:14px;border-radius:18px;width:fit-content;margin:0 auto 6px}
+#premQr img{width:200px;max-width:100%;border-radius:0}
+.prem-cap{text-align:center;margin:4px 0 12px}
 .del-btns{display:grid;gap:10px;margin-top:18px}.del-btns small{font-weight:500;opacity:.75;font-size:12px}.btn.danger{background:#ff3b5c;color:#fff}.btn.danger:hover{filter:brightness(1.1)}
 .share{display:flex;gap:8px;align-items:center;margin:12px 0 0;font-size:.9rem;color:#b9b9cc}.share input{accent-color:#d4ff3a;width:16px;height:16px}
   </style>
@@ -596,8 +599,13 @@ input[type="range"]:disabled { opacity: 0.4; }
         <button class="ic" value="cancel" aria-label="Đóng">✕</button>
       </div>
       <h3 class="prem-title" id="premName">Xóa cô ấy khỏi cuộc đời tôi</h3>
-      <div class="prem-qr" id="premQr"></div>
-      <button class="btn primary wide big" id="premBtn" type="button" hidden>✓ Đã quét · Next →</button>
+  <button class="btn primary wide big" id="premPay" type="button">💳 Thanh toán</button>
+<div id="premStep" hidden>
+  <div class="prem-qr" id="premMomo"><img src="qr.png" alt="Mã QR thanh toán" /></div>
+  <p class="muted prem-cap">Chuyển khoản xong, quét mã bên dưới để xác nhận</p>
+  <div class="prem-qr" id="premQr"></div>
+</div>
+<button class="btn primary wide big" id="premBtn" type="button" hidden>✓ Mở khoá · Next →</button>
     </form>
   </dialog>
 
@@ -1537,17 +1545,25 @@ window.NHIP_ACTIVITIES = [
   let premTarget = null;
   let premSid = "", premPoll = null;
   const stopPoll = () => { clearInterval(premPoll); premPoll = null; };
+
   function openPremium(m) {
     premTarget = m.id;
     $("#premName").textContent = m.name;
+    stopPoll();
+    $("#premPay").hidden = false;
+    $("#premStep").hidden = true;
+    $("#premBtn").hidden = true;
+    premModal.showModal();
+  }
+
+  function startPay() {
+    $("#premPay").hidden = true;
+    $("#premStep").hidden = false;
     const box = $("#premQr");
     box.innerHTML = "";
-    box.hidden = false;
-    $("#premBtn").hidden = true;
     premSid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
     const url = location.origin + location.pathname + "?unlock=" + premSid;
-    if (window.QRCode) new QRCode(box, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
-    premModal.showModal();
+    if (window.QRCode) new QRCode(box, { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
     if (!SHARED) return;
     stopPoll();
     premPoll = setInterval(async () => {
@@ -1559,23 +1575,26 @@ window.NHIP_ACTIVITIES = [
           S.premium = true;
           store.set("premium", true); // đã quét là lưu luôn, F5 vẫn còn mở khoá
           renderModes();
-          $("#premQr").hidden = true;
+          $("#premStep").hidden = true;
           $("#premBtn").hidden = false;
-          toast("Đã quét xong ✅ Bấm Next để vào");
+          toast("Đã quét xong ✅ Bấm Mở khoá để vào");
         }
       } catch {}
     }, 2000);
   }
+
   function unlockPremium() {
     stopPoll();
     S.premium = true;
     store.set("premium", true);
     if (premModal.open) premModal.close();
-    toast("Đã quét mã — mở khoá Premium ✨");
+    toast("Đã mở khoá Premium ✨");
     renderModes();
     if (premTarget) setMode(premTarget);
   }
+
   premModal.addEventListener("close", stopPoll);
+  $("#premPay").addEventListener("click", startPay);
   $("#premBtn").addEventListener("click", unlockPremium);
 
   // ---------- Boot ----------
