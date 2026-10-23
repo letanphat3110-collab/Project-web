@@ -1541,33 +1541,45 @@ window.NHIP_ACTIVITIES = [
   // ---------- Premium ----------
 const premModal = $("#premiumModal");
 let premTarget = null;
+let premSid = "", premPoll = null;
+
+const stopPoll = () => { clearInterval(premPoll); premPoll = null; };
 
 function openPremium(m) {
   premTarget = m.id;
   $("#premName").textContent = m.name;
+  stopPoll();
   $("#premPay").hidden = false;
   $("#premStep").hidden = true;
+  $("#premBtn").hidden = true;
   premModal.showModal();
 }
 
 function startPay() {
-  // Ẩn nút thanh toán, hiện bước chứa mã QR MoMo
+  // Bấm nút thanh toán vẫn hiện mã QR và hiện nút xác nhận tiếp theo
   $("#premPay").hidden = true;
   $("#premStep").hidden = false;
+  $("#premBtn").hidden = false; 
+  
+  const box = $("#premQr");
+  box.innerHTML = "";
+  premSid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const url = location.origin + location.pathname + "?unlock=" + premSid;
+  
+  if (window.QRCode) {
+    new QRCode(box, { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  }
 }
 
-function confirmTransfer() {
-  // Chuyển hướng trực tiếp sang s_.html sau khi đã thanh toán xong
+function unlockPremium() {
+  stopPoll();
+  // Bấm nút này sẽ chuyển hướng thẳng sang s_.html
   window.location.href = 's_.html';
 }
 
-premModal.addEventListener("close", () => {});
+premModal.addEventListener("close", stopPoll);
 $("#premPay").addEventListener("click", startPay);
-
-// Nút xác nhận hoàn tất chuyển tiền (đã gắn với #premBtn hoặc #confirmTransferBtn)
-const confirmBtn = $("#confirmTransferBtn") || $("#premBtn");
-if (confirmBtn) {
-  confirmBtn.addEventListener("click", confirmTransfer);
+$("#premBtn").addEventListener("click", unlockPremium);
 }
 
   // ---------- Boot ----------
