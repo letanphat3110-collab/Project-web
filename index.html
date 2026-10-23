@@ -1541,7 +1541,8 @@ window.NHIP_ACTIVITIES = [
   // ---------- Premium ----------
 const premModal = $("#premiumModal");
 let premTarget = null;
-
+let premSid = "", premPoll = null;
+  
 function openPremium(m) {
   premTarget = m.id;
   $("#premName").textContent = m.name;
