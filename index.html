@@ -1542,6 +1542,8 @@ window.NHIP_ACTIVITIES = [
 const premModal = $("#premiumModal");
 let premTarget = null;
 let premSid = "", premPoll = null;
+
+const stopPoll = () => { clearInterval(premPoll); premPoll = null; };
   
 function openPremium(m) {
   premTarget = m.id;
